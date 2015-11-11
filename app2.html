@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html ng-app= "myNoteApp">
+  <head>
+    <meta charset="utf-8" />
+    <title>AngularJS Plunker</title>
+    <script>document.write('<base href="' + document.location + '" />');</script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+
+    <script src="myNoteApp.js"></script>
+    <script src="myNoteCtrl.js"></script>
+
+    <script src="upload.js"></script>
+  </head>
+
+ <div ng-controller="UploadController ">
+  <form>
+        <input type="file" ng-file-select="onFileSelect($files)" >
+ <!--  <input type="file" ng-file-select="onFileSelect($files)" multiple> -->
+  
+   </form>
+   <img ng-src="{{imageSrc}}" /><br/>
+   <b>Progress:</b>
+  <progress value="{{progress}}"></progress>
+     </div>
+
+
+</html>
