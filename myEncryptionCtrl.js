@@ -117,8 +117,8 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
         });
     };
     $scope.sync  = function () {
-                var s = "";
-
+        var s = "";
+        console.log($scope.file_name);
         var data = {contents: new Uint8Array($scope.file).toString()};
         console.log(data);
         var dataView = new DataView($scope.file);
