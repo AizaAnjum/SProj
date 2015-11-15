@@ -5,6 +5,28 @@ var different_blocks = [];
 var key ='d6F3Efeq';
 var total_hashes = 0;
 var someBytes1 = "ABCDEFGHIJKLMNOPQRSTUVWXtZabcdefghijklmnopqrstuywxyz1234567891k151010101101010";
+function encode_utf8(s) {
+  return unescape(encodeURIComponent(s));
+}
+
+function decode_utf8(s) {
+  return decodeURIComponent(escape(s));
+}
+
+ function ab2str(buf) {
+   var s = String.fromCharCode.apply(null, new Uint8Array(buf));
+   return decode_utf8(decode_utf8(s))
+ }
+
+function str2ab(str) {
+   var s = encode_utf8(str)
+   var buf = new ArrayBuffer(s.length); 
+   var bufView = new Uint8Array(buf);
+   for (var i=0, strLen=s.length; i<strLen; i++) {
+     bufView[i] = s.charCodeAt(i);
+   }
+   return bufView;
+ }
 
 function encrypt(message, key) {
                 var keyHex = CryptoJS.enc.Utf8.parse(key);
@@ -33,6 +55,7 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
 	$scope.load = function() {
 	}; 
 
+
     $scope.get_from_server = function () {
         var encrypted_content = encrypt(someBytes1);
         var my_checksums = [];
@@ -50,7 +73,7 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
              my_checksums.push(hash);
              console.log(my_checksums.toString());
         }}
-        var data = {
+                var data = {
             Message: "Send_Me_Checksums"
         };
         $http.post("/get_checksums", data).success(function (data, status) {
@@ -94,18 +117,25 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
         });
     };
     $scope.sync  = function () {
-                var someBytes = $scope.file;
-                console.log(someBytes);
+                var s = "";
+
+        var data = {contents: new Uint8Array($scope.file).toString()};
+        console.log(data);
+        var dataView = new DataView($scope.file);
+        console.log(new Uint8Array( $scope.file));
+       $http.post("/checking", data).success(function (data, status) {})
+        var someBytes = $scope.file;
         for(i = 0; i < someBytes.length; i = i + BLOCK_SIZE) {
             var chunk = someBytes.substring(i, i+ BLOCK_SIZE)
             var enc = encrypt(chunk, key);
+            console.log(enc);
             file_chunks.push(enc);
             hash = CryptoJS.MD5(enc);
             checksums.push(hash);
-            console.log(checksums.toString());
-            console.log(enc.toString());
+            s = s + enc;
         }
-        $scope.message  = "File Loaded Successfully"
+        console.log(s);
+        $scope.message  = file_chunks;
     	var data = {
     		checksums: JSON.stringify(checksums.toString())
     	};
@@ -113,7 +143,6 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
         checksums = [];
     	$http.post("/sync", data).success(function (data, status) {
     	$scope.message  = "Hashes Sent  Successfully: " +  total_hashes + " hash(es) sent to server";
-        console.log(data);
         var send_these_blocks = [];
         var indices = [];
        if(data.indexOf("diff_blocks:") > -1) {

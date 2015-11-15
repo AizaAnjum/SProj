@@ -47,7 +47,7 @@
          var readAsText = function (file, scope) {
             var deferred = $q.defer();
             var reader = getReader(deferred, scope);         
-            reader.readAsText(file);
+            reader.readAsArrayBuffer(file);
             return deferred.promise;
         };
  

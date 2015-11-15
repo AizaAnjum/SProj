@@ -2,37 +2,37 @@
 var express = require('express');
 var app = express();
 var fs = require('fs');
+var Future = require('future');
 var crypto = require('crypto');
 var router = express.Router();  
 var BLOCK_SIZE = 44;
+var uint8 = require('uint8')
 var file_chunks = [];
 var checksums = [];
 var diff_blocks = [];
 var data = fs.readFileSync('encrypted.dat');
 var body_parser = require('body-parser');
 var mongojs = require('mongojs');
+var ArrayBufferToBuffer = require('arraybuffer-to-buffer');
 var ObjectID = require('mongodb').ObjectID;
 var db  =  mongojs('Users', ['Users']);
 var db_Files = mongojs('Files', ['Files']);
+
 data = data.toString();
-console.log(data);
-
-
-
 for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
                 var chunk = data.substring(character, character+ BLOCK_SIZE)
                 file_chunks.push(chunk);
                 hash = crypto.createHash('md5').update(chunk).digest('hex');
                 checksums.push(hash);
         }
-  console.log("hash"  + checksums)
-  app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)'));
-  app.use(body_parser.json());
+  app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
+  app.use(body_parser.json({limit: '50mb'}));
 
 
 
 
 app.get('/index.html', function (req, res) {
+ res.sendFile('index.html');
 });
 
 
@@ -88,6 +88,25 @@ app.post('/get_blocks', function (req, res) {
         }
 );
 
+app.post('/checking', function (req, res) {
+        binaryData = req.body.contents;
+        console.log("content is+ " + binaryData);
+        console.log(binaryData);
+        binaryData = binaryData.split(',');
+         var buf = new Buffer(binaryData.length); 
+        for( i = 0; i < binaryData.length; i++) {
+            buf[i] = binaryData[i];
+         //   console.log(buf[i]);
+        }
+        //console.log(buf);
+        //console.log("BUFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFERRRRRRRRRRRR" + buf.toString());
+        fs.writeFile('message.pptx', buf, function (err) {
+          if(err) {
+            throw err;
+          }
+    })
+    res.write("rtfyhuj");
+       });
 app.post('/diff_blocks', function (req, res) {
     console.log(req.body.different_blocks);
     var replace_blocks = req.body.different_blocks;
@@ -106,7 +125,6 @@ app.post('/diff_blocks', function (req, res) {
                               diff_blocks = [];
                 }
     }
-  console.log(file_chunks);
 });
 
 app.post('/sync', function (req, res) {

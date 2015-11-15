@@ -4,7 +4,6 @@ app.controller("UploadController",  function ($scope, fileReader) {
         fileReader.readAsText($scope.file, $scope)
                       .then(function(result) {
                           $scope.file = result;
-                          console.log($scope.file);
-                      });
+        });
     };
 });
