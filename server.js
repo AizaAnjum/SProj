@@ -88,25 +88,6 @@ app.post('/get_blocks', function (req, res) {
         }
 );
 
-app.post('/checking', function (req, res) {
-        binaryData = req.body.contents;
-        console.log("content is+ " + binaryData);
-        console.log(binaryData);
-        binaryData = binaryData.split(',');
-         var buf = new Buffer(binaryData.length); 
-        for( i = 0; i < binaryData.length; i++) {
-            buf[i] = binaryData[i];
-         //   console.log(buf[i]);
-        }
-        //console.log(buf);
-        //console.log("BUFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFERRRRRRRRRRRR" + buf.toString());
-        fs.writeFile('message.pptx', buf, function (err) {
-          if(err) {
-            throw err;
-          }
-    })
-    res.write("rtfyhuj");
-       });
 app.post('/diff_blocks', function (req, res) {
     console.log(req.body.different_blocks);
     var replace_blocks = req.body.different_blocks;
@@ -132,8 +113,6 @@ app.post('/sync', function (req, res) {
         client_checksums = req.body.checksums;
         client_checksums = JSON.parse(client_checksums);
         client_checksums = client_checksums.split(',');
-    //    client_checksums.splice(0,1);
-        console.log(client_checksums);
         for(i = 0; i < client_checksums.length; i++) {
                 if(checksums[i] != client_checksums[i]) {
                       console.log (checksums[i]);

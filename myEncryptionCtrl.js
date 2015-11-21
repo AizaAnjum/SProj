@@ -4,29 +4,57 @@ var checksums = [];
 var different_blocks = [];
 var key ='d6F3Efeq';
 var total_hashes = 0;
-var someBytes1 = "ABCDEFGHIJKLMNOPQRSTUVWXtZabcdefghijklmnopqrstuywxyz1234567891k151010101101010";
-function encode_utf8(s) {
-  return unescape(encodeURIComponent(s));
+var someBytes1 = 0;
+function errorHandler(e) {
+  var msg = '';
+
+  switch (e.code) {
+    case FileError.QUOTA_EXCEEDED_ERR:
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
+    case FileError.NOT_FOUND_ERR:
+      msg = 'NOT_FOUND_ERR';
+      break;
+    case FileError.SECURITY_ERR:
+      msg = 'SECURITY_ERR';
+      break;
+    case FileError.INVALID_MODIFICATION_ERR:
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
+    case FileError.INVALID_STATE_ERR:
+      msg = 'INVALID_STATE_ERR';
+      break;
+    default:
+      msg = 'Unknown Error';
+      break;
+  };
+
+  console.log('Error: ' + msg);
 }
 
-function decode_utf8(s) {
-  return decodeURIComponent(escape(s));
+window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
+  window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+}, function(e) {
+  console.log('Error', e);
+});
+
+function onInitFs(fs) {
+
+    fs.root.getFile('log.txt', {}, function(fileEntry) {
+    fileEntry.file(function(file) {
+       var reader = new FileReader();
+       reader.onloadend = function(e) {
+         someBytes1 = new Uint8Array(this.result);
+         console.log(someBytes1);
+       };
+
+       reader.readAsArrayBuffer(file);
+    }, errorHandler);
+
+  }, errorHandler);
 }
-
- function ab2str(buf) {
-   var s = String.fromCharCode.apply(null, new Uint8Array(buf));
-   return decode_utf8(decode_utf8(s))
- }
-
-function str2ab(str) {
-   var s = encode_utf8(str)
-   var buf = new ArrayBuffer(s.length); 
-   var bufView = new Uint8Array(buf);
-   for (var i=0, strLen=s.length; i<strLen; i++) {
-     bufView[i] = s.charCodeAt(i);
-   }
-   return bufView;
- }
+window.requestFileSystem(window.PERSISTENT, 5*1024*1024 /*5MB*/, onInitFs, errorHandler);
 
 function encrypt(message, key) {
                 var keyHex = CryptoJS.enc.Utf8.parse(key);
@@ -52,17 +80,18 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
     $scope.message1 = "";
     $scope.file_content;
 	//load file here, create checksums and make file chunks here in this function
-	$scope.load = function() {
-	}; 
+	$scope.load = function() {}; 
 
 
     $scope.get_from_server = function () {
-        var encrypted_content = encrypt(someBytes1);
+//        var someBytes1 = 
         var my_checksums = [];
         var server_checksums = [];
         var my_file_chunks = [];
         var different_chunk_indices = [];
-        $scope.message  = "Initial Content: " + someBytes1;
+        var array = someBytes1;
+        someBytes1 = someBytes1.toString();
+         var encrypted_content = encrypt(someBytes1);
         console.log(someBytes1);
         if(my_checksums.length < 1) {
             for(i = 0; i < someBytes1.length; i = i + BLOCK_SIZE) {
@@ -77,11 +106,11 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
             Message: "Send_Me_Checksums"
         };
         $http.post("/get_checksums", data).success(function (data, status) {
-               console.log(data);
+                console.log(data);
                 data = data.checksums;
                 data = JSON.parse(data);
                 server_checksums = data.toString().split(',');
-               console.log(data.checksums);
+                console.log(data);
                for(i = 0; i < server_checksums.length; i++) {
                     if(my_checksums[i] != server_checksums[i]) {
                         different_chunk_indices.push(i);
@@ -97,18 +126,51 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
                 }
                  $http.post("/get_blocks", data).success(function (data, status) {
                         data = data.toString().split(',');
+                        var dec = "";
                         if(data.length > 0) {
                             for(i = 0; i < data.length; i++) {
                                     var ind = parseInt(different_chunk_indices[i]);
                                     my_file_chunks[ind] = data[i];
                                     console.log(data[i]);
                                     var decrypted = decrypt(data[i], key);
+                                    dec = dec + decrypted;
                                     console.log(decrypted);
-                                    temp0 = someBytes1.substring(0,  ind*BLOCK_SIZE);
-                                    temp2 = someBytes1.substring(ind*BLOCK_SIZE + BLOCK_SIZE, someBytes1.length);
-                                    someBytes1 = temp0 + decrypted + temp2;
+                                    // temp0 = someBytes1.substring(0,  ind*BLOCK_SIZE);
+                                    // temp2 = someBytes1.substring(ind*BLOCK_SIZE + BLOCK_SIZE, someBytes1.length);
+                                    console.log(someBytes1);
+                                    someBytes1 = Uint8Array.from(someBytes1);
+                                  }
+                                    console.log(dec.toString().split(','));
+                                    console.log(array);
+                                    var buff = new ArrayBuffer(array.length);
+                                    for(i = 0; i < array.length; i++) {
+                                      buff[i] = dec[i];
+                                    }
+                                    console.log(buff);
+                                    window.requestFileSystem(window.PERSISTENT, 5*1024*1024 /*5MB*/, function (fs) { fs.root.getFile('log.txt', 
+                                      {create: true}, function(fileEntry) {
 
-                            }
+                                    // Create a FileWriter object for our FileEntry (log.txt).
+                                    fileEntry.createWriter(function(fileWriter) {
+
+                                    fileWriter.onwriteend = function(e) {
+                                      console.log('Write completed.');
+                                    };
+
+                                    fileWriter.onerror = function(e) {
+                                      console.log('Write failed: ' + e.toString());
+                                    };
+
+                                    // Create a new Blob and write it to log.txt.
+                                    var blob = new Blob([array], {type: 'text/plain'});
+
+                                    fileWriter.write(blob);
+
+                                    }, errorHandler);
+
+                                    }, errorHandler);
+                                    }, errorHandler);
+
                         $scope.message1 = "Content changed to: " + someBytes1;
                         }
                  });
@@ -118,13 +180,8 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
     };
     $scope.sync  = function () {
         var s = "";
-        console.log($scope.file_name);
-        var data = {contents: new Uint8Array($scope.file).toString()};
-        console.log(data);
-        var dataView = new DataView($scope.file);
-        console.log(new Uint8Array( $scope.file));
-       $http.post("/checking", data).success(function (data, status) {})
-        var someBytes = $scope.file;
+        var someBytes = new Uint8Array($scope.file).toString();
+        console.log(someBytes);
         for(i = 0; i < someBytes.length; i = i + BLOCK_SIZE) {
             var chunk = someBytes.substring(i, i+ BLOCK_SIZE)
             var enc = encrypt(chunk, key);
@@ -164,7 +221,3 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
             });
     	}
 });
-
-
-//
-

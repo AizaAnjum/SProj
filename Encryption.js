@@ -12,8 +12,6 @@ function toHex(str) {
     }
     return hex;
 }
- 
-
 
 function encrypt(text){
   var cipher = crypto.createCipher(algorithm,toHex(password))
