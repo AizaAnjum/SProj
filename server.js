@@ -28,13 +28,17 @@ for(character = 0; character < data.length; character = character + BLOCK_SIZE) 
   app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
   app.use(body_parser.json({limit: '50mb'}));
 
+  app.get('/index.html', function (req, res) {
+   res.sendFile('index.html');
+  });
 
-
-
-app.get('/index.html', function (req, res) {
- res.sendFile('index.html');
+app.get('/', function (req, res) {
+  res.sendFile('SignUp.html');
+}); 
+app.post('/new_user', function (req, res) {
+  console.log("lol");
+  console.log(req.body);
 });
-
 
 
 
@@ -62,6 +66,7 @@ app.get('/users/:_id', function (req, res) {
        });
   console.log('test'); // <
 });
+
 
 
 

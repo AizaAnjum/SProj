@@ -1,24 +1,23 @@
-<form class="pure-form pure-form-stacked">
-    <fieldset>
-        <legend>A Stacked Form</legend>
+<html>
+    <head>
+    <title>Simple Angular Auth</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0-beta.5/angular.min.js"></script>
+        <script src="app.js"></script>
+  </head>
+    <body ng-app="MyEncryptionapp" ng-controller="Login">
+    <h1>Welcome To Drop Box</h1>
+	Login
+    <br>
+    USERNAME:
 
-        <label for="email">Email</label>
-        <input id="email" type="email" placeholder="Email">
-
-        <label for="password">Password</label>
-        <input id="password" type="password" placeholder="Password">
-
-        <label for="state">State</label>
-        <select id="state">
-            <option>AL</option>
-            <option>CA</option>
-            <option>IL</option>
-        </select>
-
-        <label for="remember" class="pure-checkbox">
-            <input id="remember" type="checkbox"> Remember me
-        </label>
-
-        <button type="submit" class="pure-button pure-button-primary">Sign in</button>
-    </fieldset>
-</form>
+    <input type="text" ng-model="main.username" placeholder="username"><br>
+PASSWORD:
+    <input type="password" ng-model="main.password" placeholder="password"><br>
+    <br>
+    <button ng-click="main.login()">Login</button>
+    <br><br>
+	New User?
+	<a href="SignUp.html">Sign Up</a>
+    <br><br><br>
+    </body>
+</html>

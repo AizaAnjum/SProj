@@ -1,5 +1,4 @@
 var app = angular.module("myEncryptionApp", []);
-
 app.directive("ngFileSelect",function(){
   return {
     link: function($scope,el){
@@ -12,8 +11,6 @@ app.directive("ngFileSelect",function(){
         $scope.getFile();
       })
     }
-  }
-app.factory('Data', function() {
-  return { 'FileData': '' }
-})  
+  } 
 });
+

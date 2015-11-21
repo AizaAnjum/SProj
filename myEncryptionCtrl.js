@@ -41,7 +41,7 @@ window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedByt
 
 function onInitFs(fs) {
 
-    fs.root.getFile('log.txt', {}, function(fileEntry) {
+    fs.root.getFile('Hello.txt', {}, function(fileEntry) {
     fileEntry.file(function(file) {
        var reader = new FileReader();
        reader.onloadend = function(e) {
@@ -91,6 +91,7 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
         var different_chunk_indices = [];
         var array = someBytes1;
         someBytes1 = someBytes1.toString();
+        console.log(someBytes1);
          var encrypted_content = encrypt(someBytes1);
         console.log(someBytes1);
         if(my_checksums.length < 1) {
@@ -126,7 +127,11 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
                 }
                  $http.post("/get_blocks", data).success(function (data, status) {
                         data = data.toString().split(',');
+                        console.log(data);
                         var dec = "";
+                        var temp = array.toString();
+                        console.log(temp);
+                        var temp0 = "";
                         if(data.length > 0) {
                             for(i = 0; i < data.length; i++) {
                                     var ind = parseInt(different_chunk_indices[i]);
@@ -134,42 +139,46 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
                                     console.log(data[i]);
                                     var decrypted = decrypt(data[i], key);
                                     dec = dec + decrypted;
-                                    console.log(decrypted);
-                                    // temp0 = someBytes1.substring(0,  ind*BLOCK_SIZE);
-                                    // temp2 = someBytes1.substring(ind*BLOCK_SIZE + BLOCK_SIZE, someBytes1.length);
-                                    console.log(someBytes1);
-                                    someBytes1 = Uint8Array.from(someBytes1);
-                                  }
-                                    console.log(dec.toString().split(','));
-                                    console.log(array);
-                                    var buff = new ArrayBuffer(array.length);
-                                    for(i = 0; i < array.length; i++) {
-                                      buff[i] = dec[i];
-                                    }
-                                    console.log(buff);
-                                    window.requestFileSystem(window.PERSISTENT, 5*1024*1024 /*5MB*/, function (fs) { fs.root.getFile('log.txt', 
-                                      {create: true}, function(fileEntry) {
+                                    temp0 = temp.substring(0,  ind*BLOCK_SIZE);
+                                    temp2 = temp.substring(ind*BLOCK_SIZE + BLOCK_SIZE, someBytes1.length)
+                                    temp = temp0+dec+temp2;
+                             //       someBytes1 = Uint8Array.from(someBytes1);
+                                   }
+                                   for (i = 0; i < temp.length; i++) {
+                                    array[i] = temp[i];
+                                   }
+                                   console.log(array);
 
-                                    // Create a FileWriter object for our FileEntry (log.txt).
-                                    fileEntry.createWriter(function(fileWriter) {
+                //                     console.log(dec.toString().split(','));
+                //                     console.log(array);
+                //                     var buff = new ArrayBuffer(array.length);
+                //                     for(i = 0; i < array.length; i++) {
+                //                       buff[i] = dec[i];
+                //                     }
+                //                     console.log(buff);
+                //                     window.requestFileSystem(window.PERSISTENT, 5*1024*1024 /*5MB*/, function (fs) { fs.root.getFile('log.txt', 
+                //                       {create: true}, function(fileEntry) {
 
-                                    fileWriter.onwriteend = function(e) {
-                                      console.log('Write completed.');
-                                    };
+                //                     // Create a FileWriter object for our FileEntry (log.txt).
+                //                     fileEntry.createWriter(function(fileWriter) {
 
-                                    fileWriter.onerror = function(e) {
-                                      console.log('Write failed: ' + e.toString());
-                                    };
+                //                     fileWriter.onwriteend = function(e) {
+                //                       console.log('Write completed.');
+                //                     };
 
-                                    // Create a new Blob and write it to log.txt.
-                                    var blob = new Blob([array], {type: 'text/plain'});
+                //                     fileWriter.onerror = function(e) {
+                //                       console.log('Write failed: ' + e.toString());
+                //                     };
 
-                                    fileWriter.write(blob);
+                //                     // Create a new Blob and write it to log.txt.
+                //                     var blob = new Blob([array], {type: 'text/plain'});
 
-                                    }, errorHandler);
+                //                     fileWriter.write(blob);
 
-                                    }, errorHandler);
-                                    }, errorHandler);
+                //                     }, errorHandler);
+
+                //                     }, errorHandler);
+                //                     }, errorHandler);
 
                         $scope.message1 = "Content changed to: " + someBytes1;
                         }
