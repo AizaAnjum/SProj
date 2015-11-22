@@ -15,8 +15,8 @@ var body_parser = require('body-parser');
 var mongojs = require('mongojs');
 var ArrayBufferToBuffer = require('arraybuffer-to-buffer');
 var ObjectID = require('mongodb').ObjectID;
-var db  =  mongojs('Users', ['Users']);
-var db_Files = mongojs('Files', ['Files']);
+var db  =  mongojs('FileSystemDatabase', ['Users']);
+var path = require('path');
 
 data = data.toString();
 for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
@@ -28,43 +28,61 @@ for(character = 0; character < data.length; character = character + BLOCK_SIZE) 
   app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
   app.use(body_parser.json({limit: '50mb'}));
 
-  app.get('/index.html', function (req, res) {
-   res.sendFile('index.html');
-  });
 
-app.get('/', function (req, res) {
-  res.sendFile('SignUp.html');
-}); 
 app.post('/new_user', function (req, res) {
   console.log("lol");
   console.log(req.body);
 });
 
+//login requests and then check if credentials exist or not. if not, give a login error. if they exist route to homepage
+app.post('/Login', function (req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+    var message = "";
+    console.log(req.body.password);
+    db.Users.findOne({"email": email}, {"password": password}, function (err, docs) {
+      if(err) {
+        console.log(err);
+      }
+    console.log(docs);
+    docs = JSON.stringify(docs);
+    message = JSON.parse(docs)._id;
+    console.log(JSON.parse(docs)._id);
+    if(docs.length == 0) {
+     message = "Authentication Error";
+    }
+    res.send(message);
+    console.log(message);
+  });
 
+    console.log("sdfrtgyuhijk");
+});
 
 
 
 app.get('/users/:_id', function (req, res) {
   console.log("A get user request!");
   var id = req.params._id;
-  var all_files = "";
-  db.Users.findOne({"_id" : ObjectID(id)}, {"Owned_Files": 1}, function (err, docs) {           //user with user id specified in parameters
-       docs = JSON.stringify(docs);
-       console.log(JSON.parse(docs).Owned_Files);
-       var file_array = JSON.parse(docs).Owned_Files.toString().split(',');
+          app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
+          res.send(path.join(__dirname + '/Index.html'));
+  // var all_files = "";
+  // db.Users.findOne({"_id" : ObjectID(id)}, {"Owned_Files": 1}, function (err, docs) {           //user with user id specified in parameters
+  //      docs = JSON.stringify(docs);
+  //      console.log(JSON.parse(docs).Owned_Files);
+  //      var file_array = JSON.parse(docs).Owned_Files.toString().split(',');
 
-       //iterate over each file and add to all_files string to show on the webpage
-       for(i = 0; i < file_array.length; i++) {
-        db_Files.Files.findOne({"_id" : ObjectID(file_array[i])}, function (err, docs) {
-            docs = JSON.stringify(docs);
-            all_files = all_files + "FileName:         " + JSON.parse(docs).Name.toString() + "            "  + JSON.parse(docs).Content.toString() + " \n";  
-            res.send(all_files);
-          })
-        }
-        // console.log(all_files);
+  //      //iterate over each file and add to all_files string to show on the webpage
+  //      for(i = 0; i < file_array.length; i++) {
+  //       db_Files.Files.findOne({"_id" : ObjectID(file_array[i])}, function (err, docs) {
+  //           docs = JSON.stringify(docs);
+  //           all_files = all_files + "FileName:         " + JSON.parse(docs).Name.toString() + "            "  + JSON.parse(docs).Content.toString() + " \n";  
+  //           res.send(all_files);
+  //         })
+  //       }
+  //       // console.log(all_files);
 
-       });
-  console.log('test'); // <
+  //      });
+  // console.log('test'); // <
 });
 
 
