@@ -25,7 +25,7 @@ for(character = 0; character < data.length; character = character + BLOCK_SIZE) 
                 hash = crypto.createHash('md5').update(chunk).digest('hex');
                 checksums.push(hash);
         }
-  app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
+  app.use(express.static(path.join(__dirname, '/')));
   app.use(body_parser.json({limit: '50mb'}));
 
 
