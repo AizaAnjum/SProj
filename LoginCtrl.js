@@ -8,12 +8,7 @@ function LoginCtrl($scope, $http, $location, $window) {
 	   				console.log(data);
 	   				var user_id = data;
 	   				console.log(user_id);
-	   				var req_string = "users/" + user_id;
-	   			    $http.get(req_string).success(function (err) {
-		   			console.log(err);
-		   			$window.location.href = "http://localhost:3000/HomePage.html";
-	   			   });
-	   			//}
+		   			$window.location.href = "http://localhost:3000/User/" + user_id;
             });
 	   	}
     };

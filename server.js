@@ -60,11 +60,11 @@ app.post('/Login', function (req, res) {
 
 
 
-app.get('/users/:_id', function (req, res) {
+app.get('/User/:_id', function (req, res) {
   console.log("A get user request!");
   var id = req.params._id;
           app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
-          res.send(path.join(__dirname + '/Index.html'));
+          res.sendFile(path.join(__dirname + '/HomePage.html'));
   // var all_files = "";
   // db.Users.findOne({"_id" : ObjectID(id)}, {"Owned_Files": 1}, function (err, docs) {           //user with user id specified in parameters
   //      docs = JSON.stringify(docs);
