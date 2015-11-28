@@ -84,7 +84,6 @@ p.sansserif {
 
 </style>
 <!-- <input type="file" id="fileinput" ng-model = "file_content"/> -->
-
  <div ng-controller = "UploadController">   
     <p>Select The file That you want to Upload<p/>
     <form>
@@ -112,6 +111,19 @@ p.sansserif {
     }
 </style>
            <div ng-controller="LoginCtrl">
+            <script>
+            function downloadURI(uri, name) {
+                    var link = document.createElement("a");
+                    link.download = name;
+                    link.href = uri;
+                    link.click();
+            }
+            </script>
+            <div class = "myArray">
+                     <li ng-repeat="item in myArray">
+                      <a download={{item.display}} ng-href="{{item.URL}}">download</a>
+                     </li>
+            </div>
               <p>
                   <br>
                   </br>

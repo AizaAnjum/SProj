@@ -21,6 +21,26 @@ var file = "";
 app.use(express.static(path.join(__dirname, '/')));
 app.use(body_parser.json({limit: '50mb'}));
 
+app.post('/FILES', function (req, res) {
+      console.log("INITI");
+      console.log(req.body);
+      var ID = req.body.ID;
+      ID = ID.toString();
+      var data = '';
+      var all_files = fs.readdirSync(__dirname);
+      console.log(all_files);
+      for(file_num  = 0; file_num < all_files.length; file_num++) {
+            var file_name = all_files[file_num];
+            file_name = file_name.toString();
+            if(file_name.indexOf(ID) > -1 ) {
+                data = fs.readFileSync(file_name);
+                console.log(data.toString());
+            }
+      }
+      console.log(data);
+      res.send(data.toString());
+}); 
+
 app.post('/new_user', function (req, res) {
   console.log("A new user wants to join in");
   console.log(req.body);
