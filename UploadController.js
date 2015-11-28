@@ -4,7 +4,6 @@ app.controller("UploadController",  function ($scope, fileReader) {
         fileReader.readAsText($scope.file, $scope)
                       .then(function(result) {
                           $scope.file = result;
-                          console.log($scope.file_name);
                           function onInitFs(fs) {
 							console.log("Fr");
 							fs.root.getFile($scope.file_name, {create: true}, function(fileEntry) {
@@ -40,4 +39,8 @@ app.controller("UploadController",  function ($scope, fileReader) {
         });
     };
 
+     $scope.$on("fileProgress", function(e, progress) {
+        $scope.progress = progress.loaded / progress.total;
+    })
+     
 });

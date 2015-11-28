@@ -149,36 +149,6 @@ app.controller("myEncryptionCtrl", function($scope, $http) {
                                    }
                                    console.log(array);
 
-                //                     console.log(dec.toString().split(','));
-                //                     console.log(array);
-                //                     var buff = new ArrayBuffer(array.length);
-                //                     for(i = 0; i < array.length; i++) {
-                //                       buff[i] = dec[i];
-                //                     }
-                //                     console.log(buff);
-                //                     window.requestFileSystem(window.PERSISTENT, 5*1024*1024 /*5MB*/, function (fs) { fs.root.getFile('log.txt', 
-                //                       {create: true}, function(fileEntry) {
-
-                //                     // Create a FileWriter object for our FileEntry (log.txt).
-                //                     fileEntry.createWriter(function(fileWriter) {
-
-                //                     fileWriter.onwriteend = function(e) {
-                //                       console.log('Write completed.');
-                //                     };
-
-                //                     fileWriter.onerror = function(e) {
-                //                       console.log('Write failed: ' + e.toString());
-                //                     };
-
-                //                     // Create a new Blob and write it to log.txt.
-                //                     var blob = new Blob([array], {type: 'text/plain'});
-
-                //                     fileWriter.write(blob);
-
-                //                     }, errorHandler);
-
-                //                     }, errorHandler);
-                //                     }, errorHandler);
 
                         $scope.message1 = "Content changed to: " + someBytes1;
                         }

@@ -10,28 +10,45 @@ var uint8 = require('uint8')
 var file_chunks = [];
 var checksums = [];
 var diff_blocks = [];
-var data = fs.readFileSync('encrypted.dat');
 var body_parser = require('body-parser');
 var mongojs = require('mongojs');
 var ArrayBufferToBuffer = require('arraybuffer-to-buffer');
 var ObjectID = require('mongodb').ObjectID;
-var db  =  mongojs('FileSystemDatabase', ['Users']);
+var db  =  mongojs('FileSystemDatabase', ['Users', 'Files']);
 var path = require('path');
+var file = "";
 
-data = data.toString();
-for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
-                var chunk = data.substring(character, character+ BLOCK_SIZE)
-                file_chunks.push(chunk);
-                hash = crypto.createHash('md5').update(chunk).digest('hex');
-                checksums.push(hash);
-        }
-  app.use(express.static(path.join(__dirname, '/')));
-  app.use(body_parser.json({limit: '50mb'}));
-
+app.use(express.static(path.join(__dirname, '/')));
+app.use(body_parser.json({limit: '50mb'}));
 
 app.post('/new_user', function (req, res) {
-  console.log("lol");
+  console.log("A new user wants to join in");
   console.log(req.body);
+  var username = req.body.username;
+  var email = req.body.email;
+  var password = req.body.password;
+  var Owned_Files = [];
+  var Shared_Files  = [];
+  var Role = "User";
+  var inserted = false;
+  var user = {
+    username: username,
+    email: email,
+    password: password,
+    Owned_Files: Owned_Files,
+    Shared_Files: Shared_Files,
+    Role: Role
+  }
+db.Users.insert(user, function (err, result) {
+        if(err) {
+          console.log(err);
+        }
+        else {
+          console.log("New User Inserted");
+          res.send("Account Created Successfully");
+        }
+      }
+  );
 });
 
 //login requests and then check if credentials exist or not. if not, give a login error. if they exist route to homepage
@@ -54,10 +71,29 @@ app.post('/Login', function (req, res) {
     res.send(message);
     console.log(message);
   });
-
-    console.log("sdfrtgyuhijk");
 });
 
+
+app.post('/upload', function (req, res){
+    var Owner = new ObjectID(req.body.Owner);
+    var FileName = req.body.FileName;
+    var Size = req.body.Size;
+    var Type = req.body.Type;
+    var Content = req.body.Content;
+    var FileName_On_Server = req.body.Owner + '+' + FileName+ '.txt';        //write encrypted content of uploaded files in txt files 
+    fs.writeFile(FileName_On_Server, Content, function (err) {
+       if (err) {
+        console.log(err);
+       }
+       else {
+           var data = {Owner: Owner, FileName: FileName, Size: Size, Type: Type, FileLocation: path.join(__dirname + FileName_On_Server)};
+           db.Files.insert(data, function (err, result) {
+           console.log(err);
+           console.log("Inserted a document into the Files collection.");
+          });
+     }      
+  });
+});
 
 
 app.get('/User/:_id', function (req, res) {
@@ -112,27 +148,43 @@ app.post('/get_blocks', function (req, res) {
 );
 
 app.post('/diff_blocks', function (req, res) {
-    console.log(req.body.different_blocks);
+  //  console.log(req.body.different_blocks);
     var replace_blocks = req.body.different_blocks;
     replace_blocks  =  JSON.parse(replace_blocks);
     replace_blocks = replace_blocks.split(',');
     if(replace_blocks.length > 0 ) {
-                for(i = 0; i < replace_blocks.length; i++) {
+                for(i = 0; i < diff_blocks.length; i++) {
                               index_to_replace = diff_blocks[i];
                               file_chunks[index_to_replace] = replace_blocks[i];
                               var buf = new Buffer(replace_blocks[i]);
                               console.log("writing: " + replace_blocks[i])
                               console.log("on index" + index_to_replace)
-                              var foo = fs.openSync('encrypted.dat','r+');
+                              var foo = fs.openSync(file,'r+');
                               fs.writeSync(foo, buf, 0, buf.length, index_to_replace*BLOCK_SIZE);
                               console.log("content changed")
                               diff_blocks = [];
                 }
     }
+    file_chunks = [];
 });
 
 app.post('/sync', function (req, res) {
-        console.log(req.body.checksums);
+  file = req.body.user + '+' + req.body.FileName+
+  '.txt';
+  //console.log(file);
+  var data = fs.readFileSync(file);
+        data = data.toString();
+        console.log(data);
+        for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
+                var chunk = data.substring(character, character+ BLOCK_SIZE)
+                file_chunks.push(chunk);
+                console.log("chunk is" + chunk);
+                hash = crypto.createHash('md5').update(chunk).digest('hex');
+                console.log("checksum is" + hash);
+                checksums.push(hash);
+        }
+     //   // console.log(req.body.checksums);
+         //console.log(checksums);
         client_checksums = req.body.checksums;
         client_checksums = JSON.parse(client_checksums);
         client_checksums = client_checksums.split(',');
@@ -141,6 +193,7 @@ app.post('/sync', function (req, res) {
                       console.log (checksums[i]);
                       console.log(client_checksums[i]);
                       diff_blocks.push(i);
+                      console.log(i);
                       checksums[i] = client_checksums[i]; 
                 }
         }
@@ -148,8 +201,10 @@ app.post('/sync', function (req, res) {
                  res.send("diff_blocks:" + diff_blocks.toString());
         }
         else {
+                console.log("Content Unchanged");
                  res.send("checksums received");
         }
+         checksums = [];
 });
 
 var server = app.listen(3000, function () {
