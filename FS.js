@@ -1,3 +1,5 @@
+//https://github.com/kybernetikos/fsapi/blob/0344b3d1084277ff5f70b91a65226e6c60a87536/src/fs.js
+
 var FS = (function(){
 	return {
 		TEXT: "text",

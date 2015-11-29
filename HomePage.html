@@ -7,6 +7,7 @@
 <script src = "/LoginCtrl.js"></script>
 <script src="/UploadController.js"></script>
 <script src="/upload.js"></script>
+<script src ="/FS.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript"> 
 $('#btnUpload').click(function() {
@@ -121,7 +122,7 @@ p.sansserif {
             </script>
             <div class = "myArray">
                      <li ng-repeat="item in myArray">
-                      <a download={{item.display}} ng-href="{{item.URL}}">download</a>
+                      <a download={{item.display}} ng-href="{{item.URL}}">{{item.display}}</a>
                      </li>
             </div>
               <p>
