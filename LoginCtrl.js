@@ -28,6 +28,9 @@ function onInitFs(fs) {
   listFiles(fs);
 }
 
+// $http.post("/FILES", "dryfugih").success(function (data, status)  {
+
+// });
 function blobToFile(theBlob, fileName){
     //A Blob() is almost a File() - it's just missing the two properties below which we will add
     theBlob.lastModifiedDate = new Date();
@@ -42,6 +45,10 @@ var different_blocks = [];
 var key ='d6F3Efeq';
 var total_hashes = 0;
 var someBytes1 = 0;
+
+function chunkString(str, length) {
+  return str.match(new RegExp('.{1,' + length + '}', 'g'));
+}
 
 function errorHandler(e) {
   var msg = '';
@@ -114,14 +121,16 @@ function decrypt(ciphertext, key) {
         ID: id
       }
       console.log(data);
-      String.prototype.chunk = function(size) {
-    return [].concat.apply([],
-        this.split('').map(function(x,i){ return i%size ? [] : this.slice(i,i+size) }, this)
-    )
-}
      $http.post("/FILES", data).success(function (data, status) {
-            var b = data.chunk(44);
+            console.log(data);
+            for(files = 0; files < data.length; files++) {
+            console.log(files);
+            var file_name = data[files].file_name;
+            console.log(file_name);
+            var content = data[files].file_content.toString();
+            var b = chunkString(content, 44);
             console.log(b);
+            var filetype = data[files].file_type;
             var decrypted_string = "";
             for(i = 0; i < b.length; i++) {
                 decrypted_string = decrypted_string + decrypt(b[i], key);
@@ -133,11 +142,11 @@ function decrypt(ciphertext, key) {
                           console.log(decrypted_string);
                           var uint8Array  = new Uint8Array(decrypted_string);
                           var arrayBuffer = uint8Array.buffer;
-                          var blob        = new File([arrayBuffer], {type:'text'});
+                          var blob        = new File([arrayBuffer], filetype);
                           var urlCreator = window.URL || window.webkitURL; 
                           var dataurl = urlCreator.createObjectURL(blob);
                           tempppppp= {
-                          display: "file1" ,
+                          display: file_name ,
                           URL : dataurl};
                           $scope.myArray.push(tempppppp);
                           console.log( $scope.myArray);
@@ -147,9 +156,9 @@ function decrypt(ciphertext, key) {
               }, function(e) {
               console.log('Error', e);
               });
-            function onInitFs(fs) {
-            fs.root.getFile('new.txt', {create:true}, function(fileEntry) {
-            fileEntry.createWriter(function(fileWriter) {
+                  function onInitFs(fs) {
+                  fs.root.getFile('new.txt', {create:true}, function(fileEntry) {
+                  fileEntry.createWriter(function(fileWriter) {
                   fileWriter.onwriteend = function(e) {
                     console.log('Write completed.');
                   };
@@ -167,6 +176,7 @@ function decrypt(ciphertext, key) {
 
          }, errorHandler);
         listFiles(fs);
+      }
         }});
         $scope.get_from_server = function () {
         var my_checksums = [];

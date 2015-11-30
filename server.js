@@ -5,6 +5,7 @@ var fs = require('fs');
 var Future = require('future');
 var crypto = require('crypto');
 var router = express.Router();  
+var promise = require('promise');
 var BLOCK_SIZE = 44;
 var uint8 = require('uint8')
 var file_chunks = [];
@@ -21,30 +22,71 @@ var file = "";
 app.use(express.static(path.join(__dirname, '/')));
 app.use(body_parser.json({limit: '50mb'}));
 
+var fetch_file_info = function(owner, FileName) {
+  return new promise(function (resolve, reject) {
+        db.Files.findOne({$and: [{"Owner": owner}, {"FileName": FileName}]}, function (err, docs) {
+          if(err) {
+              console.log(err);
+          }
+          else {
+            // console.log(docs);
+              resolve(docs);
+          }
+      }) 
+  });
+}
+
 app.post('/FILES', function (req, res) {
-      console.log("INITI");
-      console.log(req.body);
+  console.log("Fff");
       var ID = req.body.ID;
       ID = ID.toString();
-      var data = [];
+      var Data = [];
       var all_files = fs.readdirSync(__dirname);
-      console.log(all_files);
-      for(file_num  = 0; file_num < all_files.length; file_num++) {
-            var file_name = all_files[file_num];
-            file_name = file_name.toString();
-            if(file_name.indexOf(ID) > -1 ) {
-                var file_content= fs.readFileSync(file_name);
-                console.log(file_content);
-                var file_name = file_name;
-                var file_data = {
-                  file_content : file_content,
-                  file_name : file_name 
-                }
-                console.log(file_data.file_name);
+      var user_id = new ObjectID(ID);
+      var get_all_user_files = function() {
+      return new promise (function (resolve, reject) {
+        var counter = 0;
+        for(file_num  = 0; file_num < all_files.length; file_num++) {
+                  var file_name = all_files[file_num];
+                  file_name = file_name.toString();
+                  if(file_name.indexOf(ID) > -1 ) {                
+                    counter ++;
+                  }
             }
-      }
+            for(file_num  = 0; file_num < all_files.length; file_num++) {
+                  var file_name = all_files[file_num];
+                  file_name = file_name.toString();
+                  if(file_name.indexOf(ID) > -1 ) {                
+                      var file_content= fs.readFileSync(file_name);
+                      file_content = file_content.toString();
+                      var file_name = file_name;
+                      file_name = file_name.substring(0, file_name.length-4);
+                      file_name = file_name.split('+');
+                      file_name = file_name[1];
+                      fetch_file_info(user_id, file_name).then (function (data) {
+                          var type  = data.Type;
+                          var size = data.Size;
+                                var file_data = {
+                                file_content : file_content,
+                                file_name : data.FileName,
+                                file_type : type,
+                                file_size :size
+                                }
+                                console.log(file_data.file_name)
+                                Data.push(file_data);
+                                counter --;
+                                console.log(counter);
+                                if(counter == 0) {
+                                  resolve(Data);
+                                }
+                      });
+                  }
+            }
+    });
+}
+      get_all_user_files().then (function (data) { 
       console.log(data);
-      res.send(data.toString());
+      res.send(data)});
 }); 
 
 app.post('/new_user', function (req, res) {
