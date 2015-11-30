@@ -10,6 +10,7 @@
 <script src ="/FS.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript"> 
+
 $('#btnUpload').click(function() {
     var bar = document.getElementById('progBar'),
         fallback = document.getElementById('downloadProgress'),
@@ -39,6 +40,19 @@ $('#btnUpload').click(function() {
 <h2 align="center">Welcome to DropBox</h2>
 
 <style> 
+html, body {
+    height: 100%;
+}
+
+html {
+    display: table;
+    margin: auto;
+}
+
+body {
+    display: table-cell;
+    vertical-align: middle;
+}
 .myButton {
   -moz-box-shadow:inset 0px 1px 0px 0px #3997f5;
   -webkit-box-shadow:inset 0px 1px 0px 0px #3997f5;
@@ -131,10 +145,13 @@ p.sansserif {
                   <button class="myButton" ng-click="sync()">Sync To Server</button>
 		  <br>
                   </br>
+            <button class="myButton" ng-click="CreateDirectory()">Create New Folder</button>
+                   <br>
+                  </br>
                   <button class="myButton" ng-click="upload()">Upload File</button>
                   <br>
                   </br>
-                  <button class="myButton" ng-click="get_from_server()">Sync From Server</button>
+                 <!--  <button class="myButton" ng-click="get_from_server()">Sync From Server</button> -->
               </p>
               <p class="sansserif"> {{message}} </p>
         </div>

@@ -28,6 +28,13 @@ function onInitFs(fs) {
   listFiles(fs);
 }
 
+function blobToFile(theBlob, fileName){
+    //A Blob() is almost a File() - it's just missing the two properties below which we will add
+    theBlob.lastModifiedDate = new Date();
+    theBlob.name = fileName;
+    return theBlob;
+}
+
 var BLOCK_SIZE = 31;
 var file_chunks = [];
 var checksums = [];
@@ -126,7 +133,7 @@ function decrypt(ciphertext, key) {
                           console.log(decrypted_string);
                           var uint8Array  = new Uint8Array(decrypted_string);
                           var arrayBuffer = uint8Array.buffer;
-                          var blob        = new Blob([arrayBuffer], {type:'text'});
+                          var blob        = new File([arrayBuffer], {type:'text'});
                           var urlCreator = window.URL || window.webkitURL; 
                           var dataurl = urlCreator.createObjectURL(blob);
                           tempppppp= {
