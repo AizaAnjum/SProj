@@ -66,8 +66,11 @@ app.post('/FILES', function (req, res) {
                       fetch_file_info(user_id, file_name).then (function (data) {
                           var type  = data.Type;
                           var size = data.Size;
+                          var file_name = ID +'+'+ data.FileName + '.txt';
+                          console.log(file_name);
+                          var file_content= fs.readFileSync(file_name);
                                 var file_data = {
-                                file_content : file_content,
+                                file_content : file_content.toString(),
                                 file_name : data.FileName,
                                 file_type : type,
                                 file_size :size

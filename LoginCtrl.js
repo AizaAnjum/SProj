@@ -157,7 +157,7 @@ function decrypt(ciphertext, key) {
               console.log('Error', e);
               });
                   function onInitFs(fs) {
-                  fs.root.getFile('new.txt', {create:true}, function(fileEntry) {
+                  fs.root.getFile(file_name, {create:true}, function(fileEntry) {
                   fileEntry.createWriter(function(fileWriter) {
                   fileWriter.onwriteend = function(e) {
                     console.log('Write completed.');
@@ -167,11 +167,11 @@ function decrypt(ciphertext, key) {
                     console.log('Write failed: ' + e.toString());
                   };
                   // Create a new Blob and write it to log.txt.
-                  // var array = Uint8Array.from(decrypted_string);
-                  // var blob = new Blob(array.buffer);
+                    var uint8Array  = new Uint8Array(decrypted_string);
+                          var arrayBuffer = uint8Array.buffer;
+                          var blob        = new File([arrayBuffer], filetype);
                   console.log(blob);
-                  fileWriter.write(blob, {type: 'text'});
-                  $scope.message = "Freeeeeeeee";
+                  fileWriter.write(blob);
             }, errorHandler);
 
          }, errorHandler);
@@ -291,6 +291,33 @@ function decrypt(ciphertext, key) {
           console.log(data);
           $http.post("/upload", data).success(function (data, status) {
           console.log("File uploaded success");
+          function onInitFs(fs) {
+
+  fs.root.getFile('log.txt', {create: true}, function(fileEntry) {
+
+    // Create a FileWriter object for our FileEntry (log.txt).
+    fileEntry.createWriter(function(fileWriter) {
+
+      fileWriter.onwriteend = function(e) {
+        console.log('Write completed.');
+      };
+
+      fileWriter.onerror = function(e) {
+        console.log('Write failed: ' + e.toString());
+      };
+
+      // Create a new Blob and write it to log.txt.
+      var blob = new Blob(['Lorem Ipsum'], {type: 'text/plain'});
+
+      fileWriter.write(blob);
+
+    }, errorHandler);
+
+  }, errorHandler);
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
         });
      }
     }
