@@ -125,6 +125,8 @@ p.sansserif {
        background-color:#E6E6FA;
     }
 </style>
+
+
            <div ng-controller="LoginCtrl">
             <script>
             function downloadURI(uri, name) {
@@ -134,11 +136,29 @@ p.sansserif {
                     link.click();
             }
             </script>
-            <div class = "myArray">
+            <table class="table">
+                <tr>
+                 <!--  <th>Name
+                  </th> -->
+                  <th>File 
+                  </th>
+               <!--    <th>Head Office
+                  </th> -->
+                </tr>
+                <tr ng-repeat="item in myArray">
+<!--                   <td>{{item.display}}
+                  </td> -->
+                  <td> <a download={{item.display}} ng-href="{{item.URL}}">{{item.display}}</a>
+                  </td>
+                 <!--  <td>{ {company.headoffice}}
+                  </td> -->
+                </tr>
+              </table>
+  <!--           <div class = "myArray">
                      <li ng-repeat="item in myArray">
                       <a download={{item.display}} ng-href="{{item.URL}}">{{item.display}}</a>
                      </li>
-            </div>
+            </div> -->
               <p>
                   <br>
                   </br>
@@ -148,12 +168,14 @@ p.sansserif {
             <button class="myButton" ng-click="CreateDirectory()">Create New Folder</button>
                    <br>
                   </br>
-                  <button class="myButton" ng-click="upload()">Upload File</button>
+                  <button class="myButton" ng-click="upload()">Upload File
+
+                  </button>
                   <br>
                   </br>
                  <!--  <button class="myButton" ng-click="get_from_server()">Sync From Server</button> -->
               </p>
-              <p class="sansserif"> {{message}} </p>
+              <p class="sansserif"> {{myArray}} </p>
         </div>
   </div>
 

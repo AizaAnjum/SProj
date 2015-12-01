@@ -164,6 +164,7 @@ app.post('/upload', function (req, res){
           });
      }      
   });
+    res.send("uploaded");
 });
 
 

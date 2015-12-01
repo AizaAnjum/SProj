@@ -115,29 +115,29 @@ function decrypt(ciphertext, key) {
 	//load file here, create checksums and make file chunks here in this function
       var url = $window.location.href;
       url = url.toString().split('/');
-      console.log(url);
+      // console.log(url);
       var id = url[4];
       var data = {
         ID: id
       }
-      console.log(data);
+      // console.log(data);
      $http.post("/FILES", data).success(function (data, status) {
-            console.log(data);
+            // console.log(data);
             for(files = 0; files < data.length; files++) {
-            console.log(files);
+            // console.log(files);
             var file_name = data[files].file_name;
-            console.log(file_name);
+            // console.log(file_name);
             var content = data[files].file_content.toString();
             var b = chunkString(content, 44);
-            console.log(b);
+            // console.log(b);
             var filetype = data[files].file_type;
             var decrypted_string = "";
             for(i = 0; i < b.length; i++) {
                 decrypted_string = decrypted_string + decrypt(b[i], key);
-                console.log(decrypted_string);
-                console.log(b[i]);
+                // console.log(decrypted_string);
+                // console.log(b[i]);
             }
-            console.log(decrypted_string);
+            // console.log(decrypted_string);
                           decrypted_string = decrypted_string.split(',');
                           console.log(decrypted_string);
                           var uint8Array  = new Uint8Array(decrypted_string);
@@ -149,7 +149,7 @@ function decrypt(ciphertext, key) {
                           display: file_name ,
                           URL : dataurl};
                           $scope.myArray.push(tempppppp);
-                          console.log( $scope.myArray);
+                          // console.log( $scope.myArray);
                   window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
                   window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
                   window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
@@ -185,9 +185,9 @@ function decrypt(ciphertext, key) {
         var different_chunk_indices = [];
         var array = someBytes1;
         someBytes1 = someBytes1.toString();
-        console.log(someBytes1);
+        // console.log(someBytes1);
          var encrypted_content = encrypt(someBytes1);
-        console.log(someBytes1);
+        // console.log(someBytes1);
         if(my_checksums.length < 1) {
             for(i = 0; i < someBytes1.length; i = i + BLOCK_SIZE) {
              var chunk = someBytes1.substring(i, i+ BLOCK_SIZE)
@@ -289,12 +289,20 @@ function decrypt(ciphertext, key) {
                Content   : s
           }
           console.log(data);
-          $http.post("/upload", data).success(function (data, status) {
-          console.log("File uploaded success");
+        $http.post("/upload", data).success(function (data, status) {
+        console.log("File uploaded success");
+        var blob = new File([$scope.file],$scope.file.file_type);
+        console.log($scope.file);
+   //     fileWriter.write(blob);
+        var urlCreator = window.URL || window.webkitURL; 
+        var dataurl = urlCreator.createObjectURL(blob);
+        tempppppp= {
+        display: $scope.file_name ,
+        URL : dataurl};
+        $scope.myArray.push(tempppppp);
+        console.log($scope.myArray[$scope.myArray.length-1]);
           function onInitFs(fs) {
-
-  fs.root.getFile('log.txt', {create: true}, function(fileEntry) {
-
+  fs.root.getFile($scope.file_name, {create: true}, function(fileEntry) {
     // Create a FileWriter object for our FileEntry (log.txt).
     fileEntry.createWriter(function(fileWriter) {
 
@@ -305,19 +313,16 @@ function decrypt(ciphertext, key) {
       fileWriter.onerror = function(e) {
         console.log('Write failed: ' + e.toString());
       };
-
-      // Create a new Blob and write it to log.txt.
-      var blob = new Blob(['Lorem Ipsum'], {type: 'text/plain'});
-
-      fileWriter.write(blob);
-
+        var blob = new File([$scope.file],$scope.file.file_type);
+        console.log($scope.file);
+        fileWriter.write(blob);
     }, errorHandler);
 
   }, errorHandler);
 
 }
 
-window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+window.requestFileSystem(window.PERSISTENT, 1024*1024, onInitFs, errorHandler);
         });
      }
     }
