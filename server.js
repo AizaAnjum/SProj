@@ -21,6 +21,7 @@ var file = "";
 
 app.use(express.static(path.join(__dirname, '/')));
 app.use(body_parser.json({limit: '50mb'}));
+var logged_in_users = [];
 
 var fetch_file_info = function(owner, FileName) {
   return new promise(function (resolve, reject) {
@@ -128,6 +129,9 @@ app.post('/Login', function (req, res) {
     var password = req.body.password;
     var message = "";
     console.log(req.body.password);
+    var authenticate = function() {
+    return new promise(
+     function (resolve, reject) {
     db.Users.findOne({"email": email}, {"password": password}, function (err, docs) {
       if(err) {
         console.log(err);
@@ -137,11 +141,23 @@ app.post('/Login', function (req, res) {
     message = JSON.parse(docs)._id + "," + JSON.parse(docs).username;
     console.log(JSON.parse(docs)._id);
     if(docs.length == 0) {
-     message = "Authentication Error";
+     reject("Authentication Error");
     }
-    res.send(message);
-    console.log(message);
+    else {
+      resolve(docs);
+    }
+           res.send(message);
+//    console.log(message);
   });
+  });
+  }
+  authenticate().then(
+    function (data) {
+      console.log(data);
+      logged_in_users.push(data);
+       console.log(logged_in_users);
+      }
+    )
 });
 
 
@@ -170,9 +186,24 @@ app.post('/upload', function (req, res){
 
 app.get('/User/:_id', function (req, res) {
   console.log("A get user request!");
+  console.log(logged_in_users);
   var id = req.params._id;
+  var logged_in = false;
+  for(i = 0; i < logged_in_users.length; i++) {
+    console.log(JSON.parse(logged_in_users[i])._id);
+    console.log(id);
+      if( JSON.parse(logged_in_users[i])._id === id) {
+        logged_in = true;
+        console.log("yoohoooo");
+      }
+  }
           app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
+          if(logged_in) {
           res.sendFile(path.join(__dirname + '/HomePage.html'));
+          }
+          else {
+            res.send("You are not logged in");
+          }
   // var all_files = "";
   // db.Users.findOne({"_id" : ObjectID(id)}, {"Owned_Files": 1}, function (err, docs) {           //user with user id specified in parameters
   //      docs = JSON.stringify(docs);

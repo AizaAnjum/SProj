@@ -387,12 +387,39 @@ function decrypt(ciphertext, key) {
         tempppppp= {
         display: $scope.file_name ,
         URL : dataurl};
+        var image = ('/file-icon.png');
         var li = document.createElement('li');
-        var string = "<a download" + "=" + tempppppp.display +  "  href="  + tempppppp.URL + ">" + tempppppp.display + "</a>";
+     if(tempppppp.display.indexOf(".txt") > -1) {
+        image = ('/text.png');
+       }
+       else if (tempppppp.display.indexOf(".pdf") > -1) {
+        console.log(data[i].display + "  pdf");
+        image = ('/pdf.png');
+       }
+        else if ( (tempppppp.display.indexOf(".jpg") > -1 ) || (tempppppp.display.indexOf(".jpeg") > -1 )|| (tempppppp.display.indexOf(".png") > -1 )|| (tempppppp.display.indexOf(".gif") > -1)) {
+        console.log(tempppppp.display + "  image");
+        image = ('/image.png');
+       }
+        else if (tempppppp.display.indexOf(".xls") > -1) {
+        console.log(tempppppp.display + "  excel file");
+        image = ('/excel.png');
+       }
+       else if (tempppppp.display.indexOf(".docx") > -1) {
+        console.log(data[i].display + "  excel file");
+        image = ('/word.png');
+       }
+        else if (tempppppp.display.indexOf(".html") > -1) {
+        console.log(data[i].display + "  text");
+        image = ('/html.png');
+       }
+         else if (tempppppp.display.indexOf(".pptx") > -1 || tempppppp.display.indexOf(".ppt") > -1) {
+        image = ('/ppt.png');
+       }
+       var string = "<a download" + "=" + tempppppp.display +  "  href="  + tempppppp.URL + ">" + tempppppp.display + "<img src = " + image+ " > " + "</a>";
        console.log(string);
         li.innerHTML = string;
         fragment.appendChild(li);
-        document.querySelector('#filelist').appendChild(fragment);
+   document.querySelector('#filelist').appendChild(fragment);
         function onInitFs(fs) {
         fs.root.getFile($scope.file_name, {create: true}, function(fileEntry) {
           fileEntry.createWriter(function(fileWriter) {
