@@ -9,7 +9,8 @@ function LoginCtrl($scope, $http, $location, $window) {
 	   		console.log($scope.user.email);
 	   		$http.post("/Login", $scope.user).success(function (data, status) {
 	   				console.log(data);
-	   				user_id = data;
+            data = data.split(',');
+	   				user_id = data[0];
 	   				console.log(user_id);
             authenticated = true;
             authenticated_user = user_id;
@@ -26,16 +27,6 @@ console.log('Error', e);
 
 function onInitFs(fs) {
   listFiles(fs);
-}
-
-// $http.post("/FILES", "dryfugih").success(function (data, status)  {
-
-// });
-function blobToFile(theBlob, fileName){
-    //A Blob() is almost a File() - it's just missing the two properties below which we will add
-    theBlob.lastModifiedDate = new Date();
-    theBlob.name = fileName;
-    return theBlob;
 }
 
 var BLOCK_SIZE = 31;
@@ -77,6 +68,106 @@ function errorHandler(e) {
   console.log('Error: ' + msg);
 }
 
+function toArray(list) {
+  return Array.prototype.slice.call(list || [], 0);
+}
+
+function listResults(entries) {
+  // Document fragments can improve performance since they're only appended
+  // to the DOM once. Only one browser reflow occurs.
+  var fragment = document.createDocumentFragment();
+  var temp = [];
+  var counter = entries.length;
+
+  function get_all_files () {
+  return new Promise( function (resolve, reject) {
+  entries.forEach(function(entry, i) {
+  var img = entry.isDirectory ? '<img src="folder-icon.gif">' :
+                                  '<img src="/file-icon.gif">';
+   entry.file(function(file) { //this does the trick
+            var obj = URL.createObjectURL(file);
+            console.log(obj);
+            tempppppp= {
+                          display: entry.name ,
+                          URL : obj
+                      };
+                          temp.push(tempppppp);
+                          counter--;
+                          if(counter == 0) {
+                            resolve(temp);
+                          }
+        });
+      });
+    }
+  );
+}
+  get_all_files().then(function (data) {
+    for(i = 0; i < data.length; i++) {
+       var image = ('/file-icon.png');
+       var li = document.createElement('li');
+       var ok = data[i].URL;
+       if(data[i].display.indexOf(".txt") > -1) {
+        image = ('/text.png');
+       }
+       else if (data[i].display.indexOf(".pdf") > -1) {
+        console.log(data[i].display + "  pdf");
+        image = ('/pdf.png');
+       }
+        else if ( (data[i].display.indexOf(".jpg") > -1 ) || (data[i].display.indexOf(".jpeg") > -1 )|| (data[i].display.indexOf(".png") > -1 )|| (data[i].display.indexOf(".gif") > -1)) {
+        console.log(data[i].display + "  image");
+        image = ('/image.png');
+       }
+        else if (data[i].display.indexOf(".xls") > -1) {
+        console.log(data[i].display + "  excel file");
+        image = ('/excel.png');
+       }
+       else if (data[i].display.indexOf(".docx") > -1) {
+        console.log(data[i].display + "  excel file");
+        image = ('/word.png');
+       }
+        else if (data[i].display.indexOf(".html") > -1) {
+        console.log(data[i].display + "  text");
+        image = ('/html.png');
+       }
+         else if (data[i].display.indexOf(".pptx") > -1 || data[i].display.indexOf(".ppt") > -1) {
+        image = ('/ppt.png');
+       }
+       var string = "<a download" + "=" + data[i].display +  "  href="  + ok + ">" + data[i].display + "<img src = " + image+ " > " + "</a>";
+       console.log(string);
+        li.innerHTML = string;
+        fragment.appendChild(li);
+   document.querySelector('#filelist').appendChild(fragment);
+ }
+    console.log(data[0]);
+    $scope.myArray = data;
+    return data;
+  });
+  console.log($scope.myArray);
+}
+
+function onInitFs(fs) {
+
+  var dirReader = fs.root.createReader();
+  var entries = [];
+
+  // Call the reader.readEntries() until no more results are returned.
+  var readEntries = function() {
+     dirReader.readEntries (function(results) {
+      if (!results.length) {
+        var f = listResults(entries.sort());
+        console.log(f);
+      } else {
+        entries = entries.concat(toArray(results));
+        readEntries();
+      }
+    }, errorHandler);
+  };
+
+  readEntries(); // Start reading dirs.
+
+}
+
+window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
 
 function listFiles(fs) {
                 var dirReader = fs.root.createReader();
@@ -121,63 +212,60 @@ function decrypt(ciphertext, key) {
         ID: id
       }
       // console.log(data);
-     $http.post("/FILES", data).success(function (data, status) {
-            // console.log(data);
-            for(files = 0; files < data.length; files++) {
-            // console.log(files);
-            var file_name = data[files].file_name;
-            // console.log(file_name);
-            var content = data[files].file_content.toString();
-            var b = chunkString(content, 44);
-            // console.log(b);
-            var filetype = data[files].file_type;
-            var decrypted_string = "";
-            for(i = 0; i < b.length; i++) {
-                decrypted_string = decrypted_string + decrypt(b[i], key);
-                // console.log(decrypted_string);
-                // console.log(b[i]);
-            }
-            // console.log(decrypted_string);
-                          decrypted_string = decrypted_string.split(',');
-                          console.log(decrypted_string);
-                          var uint8Array  = new Uint8Array(decrypted_string);
-                          var arrayBuffer = uint8Array.buffer;
-                          var blob        = new File([arrayBuffer], filetype);
-                          var urlCreator = window.URL || window.webkitURL; 
-                          var dataurl = urlCreator.createObjectURL(blob);
-                          tempppppp= {
-                          display: file_name ,
-                          URL : dataurl};
-                          $scope.myArray.push(tempppppp);
-                          // console.log( $scope.myArray);
-                  window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
-                  window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
-                  window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
-              }, function(e) {
-              console.log('Error', e);
-              });
-                  function onInitFs(fs) {
-                  fs.root.getFile(file_name, {create:true}, function(fileEntry) {
-                  fileEntry.createWriter(function(fileWriter) {
-                  fileWriter.onwriteend = function(e) {
-                    console.log('Write completed.');
-                  };
+     // $http.post("/FILES", data).success(function (data, status) {
+     //        // console.log(data);
+     //        for(files = 0; files < data.length; files++) {
+     //        // console.log(files);
+     //        var file_name = data[files].file_name;
+     //        // console.log(file_name);
+     //        var content = data[files].file_content.toString();
+     //        var b = chunkString(content, 44);
+     //        // console.log(b);
+     //        var filetype = data[files].file_type;
+     //        var decrypted_string = "";
+     //        for(i = 0; i < b.length; i++) {
+     //            decrypted_string = decrypted_string + decrypt(b[i], key);
+     //        }
+     //                      decrypted_string = decrypted_string.split(',');
+     //                      console.log(decrypted_string);
+     //                      var uint8Array  = new Uint8Array(decrypted_string);
+     //                      var arrayBuffer = uint8Array.buffer;
+     //                      var blob        = new File([arrayBuffer], filetype);
+     //                      var urlCreator = window.URL || window.webkitURL; 
+     //                      var dataurl = urlCreator.createObjectURL(blob);
+     //                      tempppppp= {
+     //                      display: file_name ,
+     //                      URL : dataurl};
+     //                      $scope.myArray.push(tempppppp);
+     //                      // console.log( $scope.myArray);
+     //              window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+     //              window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
+     //              window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+     //          }, function(e) {
+     //          console.log('Error', e);
+     //          });
+     //              function onInitFs(fs) {
+     //              fs.root.getFile(file_name, {create:true}, function(fileEntry) {
+     //              fileEntry.createWriter(function(fileWriter) {
+     //              fileWriter.onwriteend = function(e) {
+     //                console.log('Write completed.');
+     //              };
 
-                  fileWriter.onerror = function(e) {
-                    console.log('Write failed: ' + e.toString());
-                  };
-                  // Create a new Blob and write it to log.txt.
-                    var uint8Array  = new Uint8Array(decrypted_string);
-                          var arrayBuffer = uint8Array.buffer;
-                          var blob        = new File([arrayBuffer], filetype);
-                  console.log(blob);
-                  fileWriter.write(blob);
-            }, errorHandler);
+     //              fileWriter.onerror = function(e) {
+     //                console.log('Write failed: ' + e.toString());
+     //              };
+     //              // Create a new Blob and write it to log.txt.
+     //                var uint8Array  = new Uint8Array(decrypted_string);
+     //                      var arrayBuffer = uint8Array.buffer;
+     //                      var blob        = new File([arrayBuffer], filetype);
+     //              console.log(blob);
+     //              fileWriter.write(blob);
+     //        }, errorHandler);
 
-         }, errorHandler);
-        listFiles(fs);
-      }
-        }});
+     //     }, errorHandler);
+     //    listFiles(fs);
+     //  }
+     //    }});
         $scope.get_from_server = function () {
         var my_checksums = [];
         var server_checksums = [];
@@ -293,32 +381,35 @@ function decrypt(ciphertext, key) {
         console.log("File uploaded success");
         var blob = new File([$scope.file],$scope.file.file_type);
         console.log($scope.file);
-   //     fileWriter.write(blob);
         var urlCreator = window.URL || window.webkitURL; 
         var dataurl = urlCreator.createObjectURL(blob);
+          var fragment = document.createDocumentFragment();
         tempppppp= {
         display: $scope.file_name ,
         URL : dataurl};
-        $scope.myArray.push(tempppppp);
-        console.log($scope.myArray[$scope.myArray.length-1]);
-          function onInitFs(fs) {
-  fs.root.getFile($scope.file_name, {create: true}, function(fileEntry) {
-    // Create a FileWriter object for our FileEntry (log.txt).
-    fileEntry.createWriter(function(fileWriter) {
+        var li = document.createElement('li');
+        var string = "<a download" + "=" + tempppppp.display +  "  href="  + tempppppp.URL + ">" + tempppppp.display + "</a>";
+       console.log(string);
+        li.innerHTML = string;
+        fragment.appendChild(li);
+        document.querySelector('#filelist').appendChild(fragment);
+        function onInitFs(fs) {
+        fs.root.getFile($scope.file_name, {create: true}, function(fileEntry) {
+          fileEntry.createWriter(function(fileWriter) {
 
-      fileWriter.onwriteend = function(e) {
-        console.log('Write completed.');
-      };
+            fileWriter.onwriteend = function(e) {
+              console.log('Write completed.');
+            };
 
-      fileWriter.onerror = function(e) {
-        console.log('Write failed: ' + e.toString());
-      };
-        var blob = new File([$scope.file],$scope.file.file_type);
-        console.log($scope.file);
-        fileWriter.write(blob);
-    }, errorHandler);
+            fileWriter.onerror = function(e) {
+              console.log('Write failed: ' + e.toString());
+            };
+              var blob = new File([$scope.file],$scope.file.file_type);
+              console.log($scope.file);
+              fileWriter.write(blob);
+          }, errorHandler);
 
-  }, errorHandler);
+        }, errorHandler);
 
 }
 
@@ -382,4 +473,4 @@ window.requestFileSystem(window.PERSISTENT, 1024*1024, onInitFs, errorHandler);
             });
     	}
     };
-  LoginCtrl.$inject = ['$scope', '$http', '$location'];
+    LoginCtrl.$inject = ['$scope', '$http', '$location'];

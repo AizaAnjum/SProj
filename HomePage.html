@@ -37,7 +37,10 @@ $('#btnUpload').click(function() {
 
 });
 </script>
-<h2 align="center">Welcome to DropBox</h2>
+<a href = "/Index.html" > Logout</a>
+<br>
+</br>
+<h2 align="center">Welcome {{username}}</h2>
 
 <style> 
 html, body {
@@ -97,8 +100,10 @@ p.sansserif {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+
 </style>
 <!-- <input type="file" id="fileinput" ng-model = "file_content"/> -->
+
  <div ng-controller = "UploadController">   
     <p>Select The file That you want to Upload<p/>
     <form>
@@ -126,8 +131,8 @@ p.sansserif {
     }
 </style>
 
-
            <div ng-controller="LoginCtrl">
+            <ul id="filelist"></ul>
             <script>
             function downloadURI(uri, name) {
                     var link = document.createElement("a");
@@ -136,24 +141,6 @@ p.sansserif {
                     link.click();
             }
             </script>
-            <table class="table">
-                <tr>
-                 <!--  <th>Name
-                  </th> -->
-                  <th>File 
-                  </th>
-               <!--    <th>Head Office
-                  </th> -->
-                </tr>
-                <tr ng-repeat="item in myArray">
-<!--                   <td>{{item.display}}
-                  </td> -->
-                  <td> <a download={{item.display}} ng-href="{{item.URL}}">{{item.display}}</a>
-                  </td>
-                 <!--  <td>{ {company.headoffice}}
-                  </td> -->
-                </tr>
-              </table>
   <!--           <div class = "myArray">
                      <li ng-repeat="item in myArray">
                       <a download={{item.display}} ng-href="{{item.URL}}">{{item.display}}</a>
@@ -175,7 +162,7 @@ p.sansserif {
                   </br>
                  <!--  <button class="myButton" ng-click="get_from_server()">Sync From Server</button> -->
               </p>
-              <p class="sansserif"> {{myArray}} </p>
+             <!--  <p class="sansserif"> {{myArray}} </p> -->
         </div>
   </div>
 
