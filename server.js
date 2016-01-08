@@ -1,4 +1,3 @@
-
 var express = require('express');
 var app = express();
 var fs = require('fs');
@@ -18,80 +17,120 @@ var ObjectID = require('mongodb').ObjectID;
 var db  =  mongojs('FileSystemDatabase', ['Users', 'Files']);
 var path = require('path');
 var file = "";
-
 app.use(express.static(path.join(__dirname, '/')));
 app.use(body_parser.json({limit: '50mb'}));
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 var logged_in_users = [];
+var insert = function(FileName_On_Server, Content, FileName, Owner, Size, Type, FileLocation, checksums) {
+                  fetch_file_info(Owner, FileName).then( 
+                  function (data) {
+                  if(data == null) {
+                  fs.writeFile(FileName_On_Server, Content, function (err) {
+                   if (err) {
+                    console.log(err);
+                   }
+                   else {
+                       var data = {Owner: Owner, FileName: FileName, Size: Size, Type: Type, FileLocation: path.join(__dirname + FileName_On_Server)};
+                       db.Files.insert(data, function (err, result) {
+                       if(err) {
+                            console.log(err);
+                        }
+                        else {
+                            console.log("Inserted File " + FileName);
+                        }
+                      });
+                    }      
+                 });
+                }
+                else {
+                    console.log("File exists already");
+                  }
+                });
+}
+
+//THIS FUNCTION SYNCS EXISTING FILES
+var sync =  function (Filename, Client_Checksums) {
+  console.log("Syncing " + Filename);
+  var checksums = [];
+  var diff_blocks = [];
+  var rolling_checksums = [];
+  var data = fs.readFileSync(Filename);
+        data = data.toString();
+        //console.log(data);
+
+        //FIND MD5 CHECKSUMS FOR SERVER SIDE DATA HERE
+        for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
+                var chunk = data.substring(character, character+ BLOCK_SIZE)
+                file_chunks.push(chunk);
+                hash = crypto.createHash('md5').update(chunk).digest('hex');
+                checksums.push(hash);
+        }
+        if(checksums.length == Client_Checksums.length) {
+          for(i = 0; i < Client_Checksums.length; i++) {
+            if(Client_Checksums[i] != checksums[i]) { 
+                diff_blocks.push(i);
+            }
+          }
+        }
+        else {
+          console.log("Calculating rolling checksums because file size is different");
+          var block = 0;
+          var rolling_checksum = 0;
+           for(character = 0; character < data.length; character = character + 1) {
+             rolling_checksum = rolling_checksum + data[character].charCodeAt(0);
+             block ++;
+             if(block == BLOCK_SIZE-1 || character == data.length - 1) {
+              rolling_checksums.push(rolling_checksum);
+              block = 0;
+             }
+          }
+          console.log(rolling_checksums);
+        }
+        return diff_blocks;
+}
+
 
 var fetch_file_info = function(owner, FileName) {
+  console.log(owner);
   return new promise(function (resolve, reject) {
         db.Files.findOne({$and: [{"Owner": owner}, {"FileName": FileName}]}, function (err, docs) {
           if(err) {
               console.log(err);
+              reject("lol");
           }
           else {
-            // console.log(docs);
-              resolve(docs);
-          }
+                 resolve(docs);
+            }
       }) 
   });
 }
 
-// app.post('/FILES', function (req, res) {
-//   console.log("Fff");
-//       var ID = req.body.ID;
-//       ID = ID.toString();
-//       var Data = [];
-//       var all_files = fs.readdirSync(__dirname);
-//       var user_id = new ObjectID(ID);
-//       var get_all_user_files = function() {
-//       return new promise (function (resolve, reject) {
-//         var counter = 0;
-//         for(file_num  = 0; file_num < all_files.length; file_num++) {
-//                   var file_name = all_files[file_num];
-//                   file_name = file_name.toString();
-//                   if(file_name.indexOf(ID) > -1 ) {                
-//                     counter ++;
-//                   }
-//             }
-//             for(file_num  = 0; file_num < all_files.length; file_num++) {
-//                   var file_name = all_files[file_num];
-//                   file_name = file_name.toString();
-//                   if(file_name.indexOf(ID) > -1 ) {                
-//                       var file_content= fs.readFileSync(file_name);
-//                       file_content = file_content.toString();
-//                       var file_name = file_name;
-//                       file_name = file_name.substring(0, file_name.length-4);
-//                       file_name = file_name.split('+');
-//                       file_name = file_name[1];
-//                       fetch_file_info(user_id, file_name).then (function (data) {
-//                           var type  = data.Type;
-//                           var size = data.Size;
-//                           var file_name = ID +'+'+ data.FileName + '.txt';
-//                           console.log(file_name);
-//                           var file_content= fs.readFileSync(file_name);
-//                                 var file_data = {
-//                                 file_content : file_content.toString(),
-//                                 file_name : data.FileName,
-//                                 file_type : type,
-//                                 file_size :size
-//                                 }
-//                                 console.log(file_data.file_name)
-//                                 Data.push(file_data);
-//                                 counter --;
-//                                 console.log(counter);
-//                                 if(counter == 0) {
-//                                   resolve(Data);
-//                                 }
-//                       });
-//                   }
-//             }
-//     });
-// }
-//       get_all_user_files().then (function (data) { 
-//       console.log(data);
-//       res.send(data)});
-// }); 
+app.post('/Files', function (req, res) {
+//IF FILE DOES NOT EXIST AT SERVER, IT WILL BE ADDED TO THE DATABASE WITH THE RELEVANT DETAILS
+//IF FILE EXISTS, SYNC TAKES PLACE
+
+  console.log("INSERTING NEW FILES IN DATABASE");
+  var files = req.body.files;
+  var total_files= req.body.files.length;
+  var Owner = new ObjectID(req.body._id);
+  for(file = 0; file < total_files; file++) {
+    var f = files[file];
+    var FileName = f.Filename;
+    var Size = f.filesize;
+    var checksums = f.checksums;
+    var Type = "";
+    var Content = f.encrypted_content;
+    var FileName_On_Server = Owner + '+' + FileName+ '.txt'; 
+    var FileLocation =  path.join(__dirname + FileName_On_Server);
+    insert(FileName_On_Server, Content, FileName,  Owner, Size, Type, FileLocation, checksums);
+  }
+  res.send("Inserted new files");
+});
+
 
 app.post('/new_user', function (req, res) {
   console.log("A new user wants to join in");
@@ -99,14 +138,20 @@ app.post('/new_user', function (req, res) {
   var username = req.body.username;
   var email = req.body.email;
   var password = req.body.password;
+  var certificate = req.body.cert;
+  var picture = req.body.picture;
   var Owned_Files = [];
   var Shared_Files  = [];
+  console.log(certificate);
+  console.log(picture);
   var Role = "User";
   var inserted = false;
   var user = {
     username: username,
     email: email,
     password: password,
+    pub_key : certificate,
+    picture : picture,
     Owned_Files: Owned_Files,
     Shared_Files: Shared_Files,
     Role: Role
@@ -138,8 +183,8 @@ app.post('/Login', function (req, res) {
       }
     console.log(docs);
     docs = JSON.stringify(docs);
-    message = JSON.parse(docs)._id + "," + JSON.parse(docs).username;
-    console.log(JSON.parse(docs)._id);
+    message = JSON.parse(docs)._id;
+   // console.log(JSON.parse(docs)._id);
     if(docs.length == 0) {
      reject("Authentication Error");
     }
@@ -152,16 +197,16 @@ app.post('/Login', function (req, res) {
   });
   }
   authenticate().then(
-    function (data) {
-      console.log(data);
-      logged_in_users.push(data);
+      function (data) {
+       console.log(data);
+       logged_in_users.push(data);
        console.log(logged_in_users);
       }
     )
 });
 
 
-app.post('/upload', function (req, res){
+app.post('/upload', function (req, res) {
     var Owner = new ObjectID(req.body.Owner);
     var FileName = req.body.FileName;
     var Size = req.body.Size;
@@ -224,8 +269,37 @@ app.get('/User/:_id', function (req, res) {
   // console.log('test'); // <
 });
 
+var update_blocks = function(Filename, Block_Numbers, Updated_Blocks) {
+      for(i = 0; i < Updated_Blocks.length; i++) {
+              index_to_replace =Block_Numbers[i];
+              var buf = new Buffer(Updated_Blocks[i]);
+              console.log("writing: " + Updated_Blocks[i])
+              console.log("on index" + index_to_replace)
+              var foo = fs.openSync(Filename,'r+');
+              fs.writeSync(foo, buf, 0, buf.length, index_to_replace*BLOCK_SIZE);
+              console.log("content changed")
+      }
+}
 
+app.post('/Update_Content', function (req, res) {
+var updated_files = req.body.Updated_Blocks;
+// var mychecksums = req.body.server_checksums;
 
+//MAKE CHANGES TO THIS FUNCTION HERE TO INCORPORATE INSERTIONS ETC
+for(i = 0; i < updated_files.length; i++) {
+      var filedata = updated_files[i];
+      var filename = filedata.file;
+      if(filename != "Client.js") {
+       var owner = filedata.Owner;
+       var Block_Numbers = filedata.Block_Numbers;
+       var Updated_Blocks = filedata.Updated_Blocks;
+       var Filename = owner + '+' + filename+ '.txt'; 
+       update_blocks(Filename, Block_Numbers, Updated_Blocks);
+      }
+  }
+
+  res.send("content updated");
+});
 
 app.post('/get_checksums', function (req, res) {
   var data = {
@@ -271,43 +345,29 @@ app.post('/diff_blocks', function (req, res) {
     file_chunks = [];
 });
 
+
+
+
 app.post('/sync', function (req, res) {
-  file = req.body.user + '+' + req.body.FileName+
-  '.txt';
-  //console.log(file);
-  var data = fs.readFileSync(file);
-        data = data.toString();
-        console.log(data);
-        for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
-                var chunk = data.substring(character, character+ BLOCK_SIZE)
-                file_chunks.push(chunk);
-                console.log("chunk is" + chunk);
-                hash = crypto.createHash('md5').update(chunk).digest('hex');
-                console.log("checksum is" + hash);
-                checksums.push(hash);
+console.log(req.body.files);
+var data_to_send = [];
+var all_files = req.body.files;
+var owner = req.body._id;
+  for(file = 0; file < all_files.length; file++) {
+        var File = all_files[file];
+        var FileName = File.Filename;
+        console.log(FileName);
+        console.log(owner);
+        var FileName_On_Server = owner + '+' + FileName+ '.txt'; 
+        var diff_blocks = sync(FileName_On_Server, File.checksums);
+        if (diff_blocks.length > 0 ) {
+            var data = {Filename: FileName, Different_blocks: diff_blocks, Owner: owner}
+            data_to_send.push(data);
         }
-     //   // console.log(req.body.checksums);
-         //console.log(checksums);
-        client_checksums = req.body.checksums;
-        client_checksums = JSON.parse(client_checksums);
-        client_checksums = client_checksums.split(',');
-        for(i = 0; i < client_checksums.length; i++) {
-                if(checksums[i] != client_checksums[i]) {
-                      console.log (checksums[i]);
-                      console.log(client_checksums[i]);
-                      diff_blocks.push(i);
-                      console.log(i);
-                      checksums[i] = client_checksums[i]; 
-                }
-        }
-        if(diff_blocks.length > 0) {
-                 res.send("diff_blocks:" + diff_blocks.toString());
-        }
-        else {
-                console.log("Content Unchanged");
-                 res.send("checksums received");
-        }
-         checksums = [];
+  }
+  data_to_send = {BLOCKS_TO_SYNC: data_to_send}
+   console.log(data_to_send);
+   res.json(data_to_send);
 });
 
 var server = app.listen(3000, function () {

@@ -212,7 +212,6 @@ var WishesStore = function() {
 };
 
 window.onload = function() {
-
     var database = new WishesStore();
     database.init("wishes", 1); //database name and database version
     var btnSave = document.getElementById("btnSave");

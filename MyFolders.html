@@ -63,7 +63,7 @@ $('#btnUpload').click(function() {
       <ul class="nav navbar-nav">
         <li class="active"><a href="#">Home</a></li>
         <li><a href="#">Profile</a></li>
-        <li><a href="/MyFolders.html">My Folders</a></li>
+        <li><a href="#">My Folders</a></li>
         <li><a href="#">Shared Folders</a></li>
         <li><a href = '/Index.html'> Logout </a> </li>
       </ul>
@@ -98,24 +98,6 @@ p.thick {
 
 </style>
 <!-- <input type="file" id="fileinput" ng-model = "file_content"/> -->
-
- <div ng-controller = "UploadController">   
-    <p class = "thick">Upload New File<p/>
-    <form>
-        <input type="file" ng-file-select="onFileSelect($files)" >
-        <div class="clear"></div>
-        <div class="clear"></div>
-        <progress value="0" max="100" id="progBar">
-            <span id="downloadProgress">
-                <!-- Your fallback goes here -->
-            </span>
-        </progress>
-        <div id="progUpdate">
-            <!-- Success Message -->
-        </div>
-    </form>  
-
-
 <style>
     h2 {
         color:black;
@@ -126,21 +108,7 @@ p.thick {
        background-color:#f4f4f1;
       }
 </style>
-
-
-     <div ng-controller="LoginCtrl">
-              <button class="myButton" ng-click="upload()">Upload Files
-              </button>
-              <br>
-              </br>
-              <p class = "thick"> Create New Folder</p>
-              <button class="myButton" ng-click="CreateDirectory()">Create New Folder</button>
-     </div>
-                  <br>
-                  </br> 
-                  <br>
-                  </br>
-<p class = "thick" style = "text-align: center;font-size: 200%"> Your Files</p> 
+<p class = "thick" style = "text-align: center;font-size: 200%"> Your Folders</p> 
     <div class="container">
           <table class="table", id = "myTable">
                 <thread>
@@ -150,23 +118,5 @@ p.thick {
                 </thread>
           </table>
       </div>
-
-                 <div ng-controller="LoginCtrl">
-                          <ul id="filelist"></ul>
-                          <script>
-                                function downloadURI(uri, name) {
-                                        var link = document.createElement("a");
-                                        link.download = name;
-                                        link.href = uri;
-                                        link.click();
-                                }
-                          </script>
-                            <p>
-                                <br>
-                                </br>
-                               <!--  <button class="myButton" ng-click="get_from_server()">Sync From Server</button> -->
-                            </p>
-                           <!--  <p class="sansserif"> {{myArray}} </p> -->
-                  </div>
     </div>
 </html>
