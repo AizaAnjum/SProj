@@ -1,5 +1,6 @@
+var app = angular.module("myEncryptionApp", ['ngCookies']);
 
-var app = angular.module("myEncryptionApp", []);
+
 app.directive("ngFileSelect",function(){
   return {
     link: function($scope,el){
@@ -14,6 +15,8 @@ app.directive("ngFileSelect",function(){
     }
   } 
 });
+
+
 
 app.config(['$compileProvider',
     function ($compileProvider) {

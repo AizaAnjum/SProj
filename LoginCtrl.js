@@ -1,6 +1,6 @@
-app.controller("LoginCtrl",  ['$scope', '$http', '$location', '$window',  LoginCtrl]);
+app.controller("LoginCtrl",  ['$scope', '$http', '$location', '$window', '$cookieStore', LoginCtrl]);
 var user_id = "";
-function LoginCtrl($scope, $http, $location, $window) {
+function LoginCtrl($scope, $http, $location, $window, $cookieStore) {
 			$scope.user = {};		
       $scope.myArray = [];
       var authenticated = false;
@@ -14,6 +14,7 @@ function LoginCtrl($scope, $http, $location, $window) {
 	   				console.log(user_id);
             authenticated = true;
             authenticated_user = user_id;
+            $cookieStore.put(user_id, $scope.user.email);
 		   			$window.location.href = "http://localhost:3000/User/" + user_id;
             });
 	   	}
@@ -61,7 +62,11 @@ var url = $window.location.href;
 url = url.toString().split('/');
 console.log(url);
 var id = url[4];
-url = 'http://localhost:1234/JSONP?id='+id+'&'+'callback=?';
+var Cookie = $cookieStore.get(id);
+console.log(Cookie);
+$scope.user.folders = "/MyFolders.html";
+console.log($scope.user.folders);
+url = 'http://localhost:1234/JSONP?id='+id+'/&callback=?';
 
 $.ajax({
    type: 'GET',
@@ -84,7 +89,6 @@ $.ajax({
             var row = table.insertRow(0);
             var cell1 = row.insertCell(0);
             var cell2 = row.insertCell(1);
-            cell1.innerHTML = files[i];
             var name = files[i];
             cell2.innerHTML = "<a download" + "=" + name +  "  href="  + url + ">" + name + "</a>";
           }
