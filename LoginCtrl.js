@@ -57,6 +57,8 @@ function TimeCtrl($scope, $timeout) {
     $timeout(tick, $scope.tickInterval);
 }
 
+$scope.user.folders = "/Folders";
+console.log($scope.user.folders);
 (function($) {
 var url = $window.location.href;
 url = url.toString().split('/');
@@ -64,10 +66,11 @@ console.log(url);
 var id = url[4];
 var Cookie = $cookieStore.get(id);
 console.log(Cookie);
-$scope.user.folders = "/MyFolders.html";
-console.log($scope.user.folders);
 url = 'http://localhost:1234/JSONP?id='+id+'/&callback=?';
-
+var table = document.getElementById("folders");
+if(table != null) {
+    table.innerHTML = "<a href=" + $scope.user.folders + "/"+ id +  ">" + "My Folders" + "</a>";
+  }
 $.ajax({
    type: 'GET',
     url: url,

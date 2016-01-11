@@ -14,7 +14,7 @@ var body_parser = require('body-parser');
 var mongojs = require('mongojs');
 var ArrayBufferToBuffer = require('arraybuffer-to-buffer');
 var ObjectID = require('mongodb').ObjectID;
-var db  =  mongojs('FileSystemDatabase', ['Users', 'Files']);
+var db  =  mongojs('FileSystemDatabase', ['Users', 'Files', 'Folders']);
 var path = require('path');
 var file = "";
 app.use(express.static(path.join(__dirname, '/')));
@@ -132,6 +132,62 @@ app.post('/Files', function (req, res) {
 });
 
 
+app.post('/GetFolders', function (req, res) {
+      var id = req.body.USER_ID;
+      console.log(id);
+      var Owner = new ObjectID(id);
+      db.Folders.find({"Owner" : Owner}, function (err, docs) {
+        if(err) {
+          console.log(err);
+        }
+        else {
+          res.send(docs);
+        }
+      });
+});
+
+app.post('/NewFolder', function (req, res) {
+ console.log("INSERTING NEW FOLDER IN DATABASE");
+ var foldername = req.body.folder_name;
+ var Owner = new ObjectID(req.body.Owner);
+ var data = {FolderName: foldername, Owner: Owner, Shared: "No", Shared_Owners: []};
+ db.Folders.insert(data, function (err, result) {
+ if(err) {
+      console.log(err);
+  }
+  else {
+      console.log("Inserted folder");
+  }
+});
+
+  res.send("Inserted");
+});
+
+
+app.get('/Folders/:_id', function(req, res) {
+ console.log("A");
+  // console.log(logged_in_users);
+  var id = req.params._id;
+  var logged_in = false;
+  for(i = 0; i < logged_in_users.length; i++) {
+    console.log(JSON.parse(logged_in_users[i])._id);
+    console.log(id);
+      if( JSON.parse(logged_in_users[i])._id === id) {
+        logged_in = true;
+        console.log("yoohoooo");
+      }
+  }
+          app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
+          res.sendFile(path.join(__dirname + '/MyFolders.html'));
+    
+});
+
+app.get('/Folders/:user_id/:folder_id', function(req, res) {
+ console.log("AHHHHHH");
+          app.use(express.static('C:/Users/Aiza/Desktop/New folder (3)/SProj'));
+          res.sendFile(path.join(__dirname + '/BrowseFolders.html'));
+    
+});
 app.post('/new_user', function (req, res) {
   console.log("A new user wants to join in");
   console.log(req.body);
@@ -249,6 +305,8 @@ app.get('/User/:_id', function (req, res) {
           else {
             res.send("You are not logged in");
           }
+
+
   // var all_files = "";
   // db.Users.findOne({"_id" : ObjectID(id)}, {"Owned_Files": 1}, function (err, docs) {           //user with user id specified in parameters
   //      docs = JSON.stringify(docs);
