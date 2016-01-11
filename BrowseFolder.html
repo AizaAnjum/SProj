@@ -44,11 +44,11 @@
       </div>
   </nav>
 
-<div class="form-group">
-  <label for="usr">Folder Name:</label>
-  <input type="text" class="form-control" ng-model="folder.folder_name" required>
-</div>
-<button type="button" class="btn btn-success btn-sm" ng-click="CreateFolder()">Create New Folder <span class="glyphicon glyphicon-folder-close"></span></button>
+<label>Public Key Certificate</label>
+                              <input type="file" id="files" name="file" />
+                              <!-- <button onclick="abortRead();">Cancel read</button> -->
+                              <div class="progress-bar progress-bar-striped active" role="progressbar"><div class="percent">0%</div></div>
+<button type="button" class="btn btn-success btn-sm" ng-click="Upload()">Add New File <span class="glyphicon glyphicon-folder-close"></span></button>
 <p class = "thick" style = "text-align: center;font-size: 200%"> Your Folders</p> 
     <div class="container">
           <table class="table", id = "myTable">
@@ -74,6 +74,25 @@
 </br>
 
 <style> 
+  #progress_bar {
+    margin: 10px 0;
+    padding: 3px;
+    border: 1px solid #000;
+    font-size: 14px;
+    clear: both;
+    opacity: 0;
+    -moz-transition: opacity 1s linear;
+    -o-transition: opacity 1s linear;
+    -webkit-transition: opacity 1s linear;
+  }
+  #progress_bar.loading {
+    opacity: 1.0;
+  }
+  #progress_bar .percent {
+    background-color: #99ccff;
+    height: auto;
+    width: 0;
+  }
 html, body {
     height: 100%;
 }
