@@ -3,13 +3,16 @@ var app = express();
 var fs = require('fs');
 var Future = require('future');
 var crypto = require('crypto');
+var querystring = require('querystring');
 var router = express.Router();  
+var http = require('http');
 var promise = require('promise');
 var BLOCK_SIZE = 44;
 var uint8 = require('uint8')
 var file_chunks = [];
 var checksums = [];
 var diff_blocks = [];
+var request = require("request");
 var body_parser = require('body-parser');
 var mongojs = require('mongojs');
 var ArrayBufferToBuffer = require('arraybuffer-to-buffer');
@@ -110,6 +113,7 @@ var fetch_file_info = function(owner, FileName) {
 }
 
 app.post('/Files', function (req, res) {
+  //FROM LOCAL CLIENT APPLICATION
 //IF FILE DOES NOT EXIST AT SERVER, IT WILL BE ADDED TO THE DATABASE WITH THE RELEVANT DETAILS
 //IF FILE EXISTS, SYNC TAKES PLACE
 
@@ -188,6 +192,7 @@ app.get('/Folders/:user_id/:folder_id', function(req, res) {
           res.sendFile(path.join(__dirname + '/BrowseFolders.html'));
     
 });
+
 app.post('/new_user', function (req, res) {
   console.log("A new user wants to join in");
   console.log(req.body);
@@ -264,6 +269,59 @@ app.post('/Login', function (req, res) {
 
 app.post('/upload', function (req, res) {
     var Owner = new ObjectID(req.body.Owner);
+    var body = req.body;
+    var FileName = req.body.FileName;
+    var Folder = "Default";
+    var Size = req.body.Size;
+    var Type = req.body.Type;
+    var Content = req.body.Content;
+    var FileName_On_Server = req.body.Owner + '+' + FileName+ '.txt';        //write encrypted content of uploaded files in txt files 
+    fs.writeFile(FileName_On_Server, Content, function (err) {
+       if (err) {
+        console.log(err);
+       }
+       else {
+           var data = {Owner: Owner, Folder: Folder, FileName: FileName, Size: Size, Type: Type, FileLocation: path.join(__dirname + FileName_On_Server)};
+           db.Files.insert(data, function (err, result) {
+           console.log(err);
+           console.log("Inserted a document into the Files collection.");
+           var data = body;
+          console.log(data);
+          data = JSON.stringify(data);
+
+          var options = {
+              host: '',
+              port: 1234,
+              path: '/Upload',
+              method: 'POST',
+              keepAlive: false,
+              headers: {
+                  'Content-Type': "application/json",
+                  'Content-Length': Buffer.byteLength(data)
+              }
+          };
+
+          var reqs = http.request(options, function(resp) {
+              resp.setEncoding('utf8');
+              resp.on('data', function (chunk) {
+                console.log(chunk);
+              });
+          });
+            reqs.write(data);
+            reqs.end();
+          });
+     }      
+  });
+
+    res.send("uploaded");
+
+});
+
+
+
+app.post('/UploadToFolder', function (req, res) {
+    var Owner = new ObjectID(req.body.Owner);
+    var Folder = new ObjectID(req.body.Folder);
     var FileName = req.body.FileName;
     var Size = req.body.Size;
     var Type = req.body.Type;
@@ -274,7 +332,7 @@ app.post('/upload', function (req, res) {
         console.log(err);
        }
        else {
-           var data = {Owner: Owner, FileName: FileName, Size: Size, Type: Type, FileLocation: path.join(__dirname + FileName_On_Server)};
+           var data = {Owner: Owner, Folder: Folder, FileName: FileName, Size: Size, Type: Type, FileLocation: path.join(__dirname + FileName_On_Server)};
            db.Files.insert(data, function (err, result) {
            console.log(err);
            console.log("Inserted a document into the Files collection.");
@@ -282,6 +340,29 @@ app.post('/upload', function (req, res) {
      }      
   });
     res.send("uploaded");
+    var data = req.body;
+
+          data = JSON.stringify(data);
+
+          var options = {
+              host: 'http://localhost/',
+              port: 1234,
+              path: '/Upload',
+              method: 'POST',
+              headers: {
+                  'Content-Type': "application/json",
+                  'Content-Length': Buffer.byteLength(data)
+              }
+          };
+
+          var req = http.request(options, function(res) {
+              res.setEncoding('utf8');
+              res.on('data', function (chunk) {
+                console.log(chunk);
+              });
+          });
+
+
 });
 
 

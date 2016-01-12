@@ -44,7 +44,7 @@
       </div>
   </nav>
 <div class="container">
-<label>Upload New File</label>
+<label>Upload New File (Upload Limit : 5 MB) </label>
 <input type="file" id="files" name="file" />
 <br></br>
   <div class="progress"id = "progbar">
@@ -52,17 +52,11 @@
       0%
     </div>
   </div>
-<button type="button" class="btn btn-success btn-sm" ng-click="Upload()">Add New File <span class="glyphicon glyphicon-folder-close"></span></button>
+<button type="button" class="btn btn-success btn-sm" ng-click="Upload()">Add New File <span class="glyphicon glyphicon-file"></span></button>
 </div>
 <p class = "thick" style = "text-align: center;font-size: 200%"> Your Files</p> 
-    <div class="container">
-          <table class="table", id = "myTable">
-                <thread>
-                  <tr>
-                  <th></th>
-                  <tr>
-                </thread>
-          </table>
+    <div class = "jumbotron">
+       <div id = "ListFiles"> </div>
     </div>
   </div>
 <br>
