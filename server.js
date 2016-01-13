@@ -162,6 +162,29 @@ app.post('/NewFolder', function (req, res) {
   else {
       console.log("Inserted folder");
   }
+
+         var data1 = JSON.stringify(data);
+            console.log(err);
+                var options = {
+              host: '',
+              port: 1234,
+              path: '/NewFolder',
+              method: 'POST',
+              keepAlive: false,
+              headers: {
+                  'Content-Type': "application/json",
+                  'Content-Length': Buffer.byteLength(data1)
+              }
+          };
+
+          var reqs = http.request(options, function(resp) {
+              resp.setEncoding('utf8');
+              resp.on('data', function (chunk) {
+                console.log(chunk);
+              });
+          });
+            reqs.write(data1);
+            reqs.end();
 });
 
   res.send("Inserted");
@@ -326,6 +349,7 @@ app.post('/UploadToFolder', function (req, res) {
     var Size = req.body.Size;
     var Type = req.body.Type;
     var Content = req.body.Content;
+    var data1 = req.body;
     var FileName_On_Server = req.body.Owner + '+' + FileName+ '.txt';        //write encrypted content of uploaded files in txt files 
     fs.writeFile(FileName_On_Server, Content, function (err) {
        if (err) {
@@ -339,29 +363,30 @@ app.post('/UploadToFolder', function (req, res) {
           });
      }      
   });
-    res.send("uploaded");
-    var data = req.body;
 
-          data = JSON.stringify(data);
+          data1 = JSON.stringify(data1);
 
           var options = {
-              host: 'http://localhost/',
+              host: '',
               port: 1234,
               path: '/Upload',
               method: 'POST',
               headers: {
                   'Content-Type': "application/json",
-                  'Content-Length': Buffer.byteLength(data)
+                  'Content-Length': Buffer.byteLength(data1)
               }
           };
 
-          var req = http.request(options, function(res) {
-              res.setEncoding('utf8');
-              res.on('data', function (chunk) {
+          var reqs = http.request(options, function(resp) {
+              resp.setEncoding('utf8');
+              resp.on('data', function (chunk) {
                 console.log(chunk);
               });
           });
 
+          reqs.write(data1);
+          reqs.end();
+    res.send("uploaded");
 
 });
 
