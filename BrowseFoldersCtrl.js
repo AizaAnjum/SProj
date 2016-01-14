@@ -12,8 +12,15 @@ function BrowseFoldersCtrl($scope, $http, $location, $window, $cookieStore) {
       console.log(url);
       var user_id = url[4];
       var folder_id = url[5];
-        var reader;
-    var progress = document.getElementById("animated_progress");
+      var data = {
+        ID: folder_id
+      }
+      $http.post("/GetFolderName", data).success(function (data, status) {
+          console.log(data[0].FolderName);
+           $scope.folder.FolderName = data[0].FolderName;
+      });
+      var reader;
+      var progress = document.getElementById("animated_progress");
 
 function chunkString(str, length) {
   return str.match(new RegExp('.{1,' + length + '}', 'g'));
@@ -132,6 +139,9 @@ function decrypt(ciphertext, key) {
       //ASK LOCAL FILES FOR EXISTING FILES AND DISPLAY THEM 
        // $http.post("/GetFolders", data).success(function (data, status) {
        //  });
+
+
+
     $scope.Upload = function() {
         var progress = document.getElementById("progbar");
          progress.innerHTML = "<div id = 'animated_progress'" +
@@ -146,7 +156,7 @@ function decrypt(ciphertext, key) {
         console.log($scope.folder.file);
           var s = "";
         var someBytes = new Uint8Array($scope.folder.file).toString();
-        //console.log(someBytes);
+        console.log(someBytes);
         var done = false;
         //uploaded file being
         for(i = 0; i < someBytes.length; i = i + BLOCK_SIZE) {
@@ -172,9 +182,11 @@ function decrypt(ciphertext, key) {
           console.log(size);
           var type = $scope.folder.file_type;
           console.log(type);
+          var foldername = $scope.folder.FolderName;
 
           var data = {
                Owner: user_id,
+               FolderName: foldername,
                Folder: folder_id,
                FileName : filename.toString(),
                Size : size,

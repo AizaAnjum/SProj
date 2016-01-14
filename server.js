@@ -58,6 +58,11 @@ var insert = function(FileName_On_Server, Content, FileName, Owner, Size, Type, 
 //THIS FUNCTION SYNCS EXISTING FILES
 var sync =  function (Filename, Client_Checksums) {
   console.log("Syncing " + Filename);
+  var FileName = Filename.split('+');
+  var user = FileName[0];
+  FileName = Filename.split('/');
+  var Filename = user + '+' + FileName[FileName.length - 1];
+  console.log(Filename);
   var checksums = [];
   var diff_blocks = [];
   var rolling_checksums = [];
@@ -340,16 +345,27 @@ app.post('/upload', function (req, res) {
 
 });
 
-
+app.post('/GetFolderName', function (req, res) {
+  var folder_id = new ObjectID(req.body.ID);
+  db.Folders.find({"_id" : folder_id}, function (err, docs) {
+        if(err) {
+          console.log(err);
+        }
+        else {
+          res.send(docs);
+        }
+      });
+});
 
 app.post('/UploadToFolder', function (req, res) {
     var Owner = new ObjectID(req.body.Owner);
     var Folder = new ObjectID(req.body.Folder);
+    var FolderName = req.body.FolderName;
     var FileName = req.body.FileName;
     var Size = req.body.Size;
     var Type = req.body.Type;
     var Content = req.body.Content;
-    var data1 = req.body;
+    var data1 = {FolderName: FolderName, FileName: FileName, Content: Content };
     var FileName_On_Server = req.body.Owner + '+' + FileName+ '.txt';        //write encrypted content of uploaded files in txt files 
     fs.writeFile(FileName_On_Server, Content, function (err) {
        if (err) {
