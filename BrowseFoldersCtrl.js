@@ -12,6 +12,16 @@ function BrowseFoldersCtrl($scope, $http, $location, $window, $cookieStore) {
       console.log(url);
       var user_id = url[4];
       var folder_id = url[5];
+       $scope.folder.folder_id = folder_id;
+       $scope.folder.user_id = user_id;
+      var navbar = document.getElementById("URLS");
+      var home = "/User/"+ user_id;
+      var folders = "/Folders/" + user_id;
+      navbar.innerHTML = "<li id = 'Home'><a href=" + home + ">Home</a></li>" + 
+          "<li id = 'Profile'>" + "<a href='#'>Profile</a></li>" +
+          "<li class='active'>" + "<a href="+folders+">My Folders</a></li>" + 
+          "<li><a href='#'>" + "Shared Folders</a></li>" +
+          "<li><a href = '/Index.html'>" + "Logout </a> </li>";
       var data = {
         ID: folder_id
       }
@@ -140,7 +150,19 @@ function decrypt(ciphertext, key) {
        // $http.post("/GetFolders", data).success(function (data, status) {
        //  });
 
+    $scope.Share = function() {
+      console.log($scope.folder.ShareWith);
+      var data = {
+        User_ID: user_id,
+        Folder_ID: folder_id,
+        Users: $scope.folder.ShareWith
+      }
+        $http.post("/ShareFolder", data).success(function (data, status) {
+        console.log("data");
+      });
+      //SEND FOLDER SHARE REQUEST TO SERVER
 
+    }
 
     $scope.Upload = function() {
         var progress = document.getElementById("progbar");
@@ -198,6 +220,7 @@ function decrypt(ciphertext, key) {
           console.log("File uploaded success");
           var blob = new File([$scope.folder.file],$scope.folder.file_type);
           var url = URL.createObjectURL(blob);
+          console.log(url);
           console.log($scope.folder.file);
           var name =  $scope.folder.file_name;
           var string = "<a download" + "=" + name +  "  href="  + url + ">";

@@ -3,6 +3,7 @@ var app = express();
 var fs = require('fs');
 var Future = require('future');
 var crypto = require('crypto');
+var mkdirp = require('mkdirp');
 var querystring = require('querystring');
 var router = express.Router();  
 var http = require('http');
@@ -20,6 +21,9 @@ var ObjectID = require('mongodb').ObjectID;
 var db  =  mongojs('FileSystemDatabase', ['Users', 'Files', 'Folders']);
 var path = require('path');
 var file = "";
+var dirString = path.dirname(fs.realpathSync(__filename));
+
+
 app.use(express.static(path.join(__dirname, '/')));
 app.use(body_parser.json({limit: '50mb'}));
 app.use(function(req, res, next) {
@@ -28,6 +32,14 @@ app.use(function(req, res, next) {
   next();
 });
 var logged_in_users = [];
+function toBuffer(Arr) {
+    var buff = new Buffer(Arr.length);
+    for (var i = 0; i < buff.length; ++i) {
+        buff[i] = Arr[i];
+    }
+    return buff;
+}
+
 var insert = function(FileName_On_Server, Content, FileName, Owner, Size, Type, FileLocation, checksums) {
                   fetch_file_info(Owner, FileName).then( 
                   function (data) {
@@ -221,6 +233,23 @@ app.get('/Folders/:user_id/:folder_id', function(req, res) {
     
 });
 
+
+
+
+app.post('/ShareFolder', function(req, res) {
+  var Owner= new ObjectID(req.body.User_ID);
+  var share_with = req.body.Users;
+  var Folder = new ObjectID(req.body.Folder_ID);
+  //SEND REQUEST TO LOCAL APP TO RE ENCRYPT SHARED FOLDER SEND USERS PUBLIC KEY ALSO
+  //RESPONSE WILL CONTAIN REENCRYPTED FILES AND ENCRYPTED ENCRYPTION KEY FOR SHARED USER INSERT THESE IN THE DATABASE
+  //FOLDER SHARED WITH NEW OWNER WHO WILL RECEIVE ENCRYPTION KEY ON HIS/HER LOCAL APP AND DECRYPT USING OWN PUBLIC KEY AND
+  //DISPLAY THESE FILES IN SHARED FOLDER PART OF THE WEB APP
+});
+
+
+
+
+
 app.post('/new_user', function (req, res) {
   console.log("A new user wants to join in");
   console.log(req.body);
@@ -231,15 +260,11 @@ app.post('/new_user', function (req, res) {
   var picture = req.body.picture;
   var Owned_Files = [];
   var Shared_Files  = [];
-  console.log(certificate);
-  console.log(picture);
   var Role = "User";
   var inserted = false;
   var user = {
     username: username,
     email: email,
-    password: password,
-    pub_key : certificate,
     picture : picture,
     Owned_Files: Owned_Files,
     Shared_Files: Shared_Files,
@@ -251,12 +276,29 @@ db.Users.insert(user, function (err, result) {
         }
         else {
           console.log("New User Inserted");
-          res.send("Account Created Successfully");
         }
       }
   );
+db.Users.findOne({email: email}, function (err, result){
+      console.log(result._id);
+      var user = result._id;
+      var cert_name = user + ".pem";
+      var profile_picture =
+    mkdirp(dirString + '/' + user, function(err) { 
+      if(err) {
+        console.log(err);
+      }
+      else {
+        cert = certificate.split(',');
+        var buff = toBuffer(cert);
+        console.log(buff);
+        var path = dirString +'/' + user + '/' + cert_name;
+        fs.writeFileSync(path, buff);
+         res.send("Account Created Successfully");
+      }
+    });
 });
-
+});
 //login requests and then check if credentials exist or not. if not, give a login error. if they exist route to homepage
 app.post('/Login', function (req, res) {
     var email = req.body.email;
@@ -380,8 +422,8 @@ app.post('/UploadToFolder', function (req, res) {
      }      
   });
 
+try {
           data1 = JSON.stringify(data1);
-
           var options = {
               host: '',
               port: 1234,
@@ -402,6 +444,11 @@ app.post('/UploadToFolder', function (req, res) {
 
           reqs.write(data1);
           reqs.end();
+        }
+
+        catch (e) {
+          console.log(e);
+        }
     res.send("uploaded");
 
 });

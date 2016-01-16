@@ -59,6 +59,8 @@ function TimeCtrl($scope, $timeout) {
 
 $scope.user.folders = "/Folders";
 console.log($scope.user.folders);
+
+
 (function($) {
 var url = $window.location.href;
 url = url.toString().split('/');
@@ -87,14 +89,18 @@ $.ajax({
         var blob = new Blob([str2ab(content[i])]); // pass a useful mime type here
         var url = URL.createObjectURL(blob);
         console.log(url);
-          var table = document.getElementById("myTable");
-          if(table != null) {
-            var row = table.insertRow(0);
-            var cell1 = row.insertCell(0);
-            var cell2 = row.insertCell(1);
-            var name = files[i];
-            cell2.innerHTML = "<a download" + "=" + name +  "  href="  + url + ">" + name + "</a>";
-          }
+        var name = files[i].split('/');
+        name = name[name.length -1 ]
+        var string = "<a download" + "=" + name +  "  href="  + url + ">";
+        var table = document.getElementById("ListFiles");
+            var s = table.innerHTML;
+            var temp = "<div class = 'col-xs-2 col-lg-2'>"+
+            "<div>"+ string + "<img class = 'group-list-group-image' src = '/Folder-icon.png' style = 'width:50px; height:50px'/></a>"
+            + "<h4 class= 'group inner list-group-item-heading'>"+ name + "</h4>" +
+            "</div>"+
+            "</div>";
+            s = s + temp;
+          table.innerHTML = s;
        }
     },
     error: function(e) {
@@ -144,6 +150,91 @@ function decrypt(ciphertext, key) {
       var data = {
         ID: id
       }
+      function errorHandler(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File Not Found!');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case evt.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    };
+  }
+
+  function updateProgress(evt) {
+    // evt is an ProgressEvent.
+    var progress = document.getElementById("progbar");
+    if (evt.lengthComputable) {
+      var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+      // Increase the progress bar length.
+      if (percentLoaded < 100) {
+       progress.innerHTML = "<div id = 'animated_progress'" +
+        "class='progress-bar progress-bar-striped active'" +
+         "role='progressbar' aria-valuenow= + "+percentLoaded+" +"+  
+         "aria-valuemin='0' aria-valuemax='100'"+ 
+         "style='width:" + percentLoaded + "%'>"+
+          "<div class='percent'>"+
+        percentLoaded+"%"+
+      "</div>"
+    "</div>";
+      }
+    }
+  }
+
+  function handleFileSelect(evt) {
+    // Reset progress indicator on new file selection.
+    var progress = document.getElementById("progbar");
+     progress.innerHTML = "<div id = 'animated_progress'" +
+        "class='progress-bar progress-bar-striped active'" +
+         "role='progressbar' aria-valuenow= + "+0+" +"+  
+         "aria-valuemin='0' aria-valuemax='100'"+ 
+         "style='width:" + 0 + "%'>"+
+          "<div class='percent'>"+
+        0+"%"+
+      "</div>"
+    "</div>";
+
+    reader = new FileReader();
+    reader.onerror = errorHandler;
+    reader.onprogress = updateProgress;
+    reader.onabort = function(e) {
+      alert('File read cancelled');
+    };
+    reader.onloadstart = function(e) {
+     // document.getElementById('animated_progress').className = 'loading';
+    };
+    reader.onload = function(e) {
+      // Ensure that the progress bar displays 100% at the end.
+     var progress = document.getElementById("progbar");
+     progress.innerHTML = "<div id = 'animated_progress'" +
+        "class='progress-bar progress-bar-striped active'" +
+         "role='progressbar' aria-valuenow= + "+100+" +"+  
+         "aria-valuemin='0' aria-valuemax='100'"+ 
+         "style='width:" + 100 + "%'>"+
+          "<div class='percent'>"+
+        100+"%"+
+      "</div>"
+    "</div>";
+      console.log(reader.result);
+      console.log(reader.name);
+      $scope.file = reader.result;
+      //setTimeout("document.getElementById('animated_progress').className='';", 2000);
+    }
+
+    // Read in the image file as a binary string.
+    $scope.file_name = evt.target.files[0].name;
+    $scope.file_type = evt.target.files[0].type;
+    $scope.file_size = evt.target.files[0].size;
+    reader.readAsArrayBuffer(evt.target.files[0]);
+  }
+var f = document.getElementById('files');
+if( f !== null) {
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+}
 $scope.get_from_server = function () {
         var my_checksums = [];
         var server_checksums = [];
@@ -217,7 +308,7 @@ $scope.get_from_server = function () {
         });
     };
 
-    $scope.upload =  function () {
+    $scope.Upload =  function () {
       	var s = "";
         var url = $window.location.href;
         url = url.toString().split('/');
@@ -257,18 +348,21 @@ $scope.get_from_server = function () {
           }
           console.log(data);
         $http.post("/upload", data).success(function (data, status) {
-        console.log("File uploaded success");
-        var blob = new File([$scope.file],$scope.file.file_type);
-        var url = URL.createObjectURL(blob);
-        console.log($scope.file);
-        var name =  $scope.file_name;
-        var string = "<a download" + "=" + name +  "  href="  + url + ">" + name + "</a>";
-        var table = document.getElementById("myTable");
-          var row = table.insertRow(0);
-          var cell1 = row.insertCell(0);
-          var cell2 = row.insertCell(1);
-          cell1.innerHTML = name;
-          cell2.innerHTML = string;
+          console.log("File uploaded success");
+          var blob = new File([$scope.file],$scope.file_type);
+          var url = URL.createObjectURL(blob);
+          console.log($scope.file);
+          var name =  $scope.file_name;
+          var string = "<a download" + "=" + name +  "  href="  + url + ">";
+          var table = document.getElementById("ListFiles");
+            var s = table.innerHTML;
+            var temp = "<div class = 'col-xs-2 col-lg-2'>"+
+            "<div>"+ string + "<img class = 'group-list-group-image' src = '/Folder-icon.png' style = 'width:50px; height:50px'/></a>"
+            + "<h4 class= 'group inner list-group-item-heading'>"+ name + "</h4>" +
+            "</div>"+
+            "</div>";
+            s = s + temp;
+          table.innerHTML = s;
 
         });
      }
