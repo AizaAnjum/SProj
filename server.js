@@ -23,6 +23,14 @@ var path = require('path');
 var file = "";
 var dirString = path.dirname(fs.realpathSync(__filename));
 
+function existsSync(filePath){
+  try{
+    fs.statSync(filePath);
+  }catch(err){
+    if(err.code == 'ENOENT') return false;
+  }
+  return true;
+};
 
 app.use(express.static(path.join(__dirname, '/')));
 app.use(body_parser.json({limit: '50mb'}));
@@ -41,15 +49,12 @@ function toBuffer(Arr) {
 }
 
 var insert = function(FileName_On_Server, Content, FileName, Owner, Size, Type, FileLocation, checksums) {
-                  fetch_file_info(Owner, FileName).then( 
-                  function (data) {
-                  if(data == null) {
                   fs.writeFile(FileName_On_Server, Content, function (err) {
                    if (err) {
                     console.log(err);
                    }
                    else {
-                       var data = {Owner: Owner, FileName: FileName, Size: Size, Type: Type, FileLocation: path.join(__dirname + FileName_On_Server)};
+                       var data = {Owner: Owner, FileName: FileName, Size: Size, Type: Type};
                        db.Files.insert(data, function (err, result) {
                        if(err) {
                             console.log(err);
@@ -60,57 +65,52 @@ var insert = function(FileName_On_Server, Content, FileName, Owner, Size, Type, 
                       });
                     }      
                  });
-                }
-                else {
-                    console.log("File exists already");
-                  }
-                });
 }
 
 //THIS FUNCTION SYNCS EXISTING FILES
 var sync =  function (Filename, Client_Checksums) {
   console.log("Syncing " + Filename);
-  var FileName = Filename.split('+');
-  var user = FileName[0];
-  FileName = Filename.split('/');
-  var Filename = user + '+' + FileName[FileName.length - 1];
-  console.log(Filename);
-  var checksums = [];
-  var diff_blocks = [];
-  var rolling_checksums = [];
-  var data = fs.readFileSync(Filename);
-        data = data.toString();
-        //console.log(data);
+  // var FileName = Filename.split('+');
+  // var user = FileName[0];
+  // FileName = Filename.split('/');
+  // var Filename = '/' + user + '+' + FileName[FileName.length - 1];
+  // console.log(Filename);
+  // var checksums = [];
+  // var diff_blocks = [];
+  // var rolling_checksums = [];
+  // var data = fs.readFileSync(Filename);
+  //       data = data.toString();
+  //       //console.log(data);
 
-        //FIND MD5 CHECKSUMS FOR SERVER SIDE DATA HERE
-        for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
-                var chunk = data.substring(character, character+ BLOCK_SIZE)
-                file_chunks.push(chunk);
-                hash = crypto.createHash('md5').update(chunk).digest('hex');
-                checksums.push(hash);
-        }
-        if(checksums.length == Client_Checksums.length) {
-          for(i = 0; i < Client_Checksums.length; i++) {
-            if(Client_Checksums[i] != checksums[i]) { 
-                diff_blocks.push(i);
-            }
-          }
-        }
-        else {
-          console.log("Calculating rolling checksums because file size is different");
-          var block = 0;
-          var rolling_checksum = 0;
-           for(character = 0; character < data.length; character = character + 1) {
-             rolling_checksum = rolling_checksum + data[character].charCodeAt(0);
-             block ++;
-             if(block == BLOCK_SIZE-1 || character == data.length - 1) {
-              rolling_checksums.push(rolling_checksum);
-              block = 0;
-             }
-          }
-          console.log(rolling_checksums);
-        }
-        return diff_blocks;
+  //       //FIND MD5 CHECKSUMS FOR SERVER SIDE DATA HERE
+  //       for(character = 0; character < data.length; character = character + BLOCK_SIZE) {
+  //               var chunk = data.substring(character, character+ BLOCK_SIZE)
+  //               file_chunks.push(chunk);
+  //               hash = crypto.createHash('md5').update(chunk).digest('hex');
+  //               checksums.push(hash);
+  //       }
+  //       if(checksums.length == Client_Checksums.length) {
+  //         for(i = 0; i < Client_Checksums.length; i++) {
+  //           if(Client_Checksums[i] != checksums[i]) { 
+  //               diff_blocks.push(i);
+  //           }
+  //         }
+  //       }
+  //       else {
+  //         console.log("Calculating rolling checksums because file size is different");
+  //         var block = 0;
+  //         var rolling_checksum = 0;
+  //          for(character = 0; character < data.length; character = character + 1) {
+  //            rolling_checksum = rolling_checksum + data[character].charCodeAt(0);
+  //            block ++;
+  //            if(block == BLOCK_SIZE-1 || character == data.length - 1) {
+  //             rolling_checksums.push(rolling_checksum);
+  //             block = 0;
+  //            }
+  //         }
+  //         console.log(rolling_checksums);
+  //       }
+  //       return diff_blocks;
 }
 
 
@@ -133,7 +133,6 @@ app.post('/Files', function (req, res) {
   //FROM LOCAL CLIENT APPLICATION
 //IF FILE DOES NOT EXIST AT SERVER, IT WILL BE ADDED TO THE DATABASE WITH THE RELEVANT DETAILS
 //IF FILE EXISTS, SYNC TAKES PLACE
-
   console.log("INSERTING NEW FILES IN DATABASE");
   var files = req.body.files;
   var total_files= req.body.files.length;
@@ -141,15 +140,24 @@ app.post('/Files', function (req, res) {
   for(file = 0; file < total_files; file++) {
     var f = files[file];
     var FileName = f.Filename;
+    FileName = FileName.split('/');
+    FileName = FileName[FileName.length - 1];
+    console.log(FileName);
     var Size = f.filesize;
     var checksums = f.checksums;
     var Type = "";
     var Content = f.encrypted_content;
-    var FileName_On_Server = Owner + '+' + FileName+ '.txt'; 
-    var FileLocation =  path.join(__dirname + FileName_On_Server);
-    insert(FileName_On_Server, Content, FileName,  Owner, Size, Type, FileLocation, checksums);
+    var FileName_On_Server =dirString + '/' + Owner + '/' + FileName + '.txt'; 
+
+          if (existsSync(FileName_On_Server)) {
+              console.log(FileName + " " + "Exists on server already");
+          }
+          else if(existsSync(FileName_On_Server) == false) {
+            insert(FileName_On_Server, Content, FileName,  Owner, Size, Type, FileLocation, checksums);
+          }
+    
   }
-  res.send("Inserted new files");
+ // res.send("Inserted new files");
 });
 
 
@@ -265,7 +273,7 @@ app.post('/new_user', function (req, res) {
   var user = {
     username: username,
     email: email,
-    picture : picture,
+    password: password,
     Owned_Files: Owned_Files,
     Shared_Files: Shared_Files,
     Role: Role
