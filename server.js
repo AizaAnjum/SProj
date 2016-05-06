@@ -1320,7 +1320,7 @@ function simple_insert(hash, index) {
                 });
     });
 }
-
+         
 app.post('/FileUploadFromApp', function (req, res) {
     console.log(req.body);
     var Folder = req.body.Folder;
